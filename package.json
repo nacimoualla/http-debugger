@@ -1,6 +1,6 @@
 {
   "name": "http-debugger",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Lightweight HTTP debug middleware with terminal UI",
   "keywords": [
     "http",
