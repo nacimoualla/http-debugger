@@ -1,7 +1,22 @@
 {
   "name": "http-debugger",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lightweight HTTP debug middleware with terminal UI",
+  "keywords": [
+    "http",
+    "debug",
+    "middleware",
+    "express",
+    "logger",
+    "request",
+    "response",
+    "terminal",
+    "ansi",
+    "stream",
+    "inspect",
+    "devtools",
+    "development"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
