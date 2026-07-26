@@ -8,19 +8,19 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./express": {
+      "types": "./dist/adapters/express.d.ts",
       "import": "./dist/adapters/express.js",
-      "require": "./dist/adapters/express.cjs",
-      "types": "./dist/adapters/express.d.ts"
+      "require": "./dist/adapters/express.cjs"
     },
     "./types": {
+      "types": "./dist/types.d.ts",
       "import": "./dist/types.js",
-      "require": "./dist/types.cjs",
-      "types": "./dist/types.d.ts"
+      "require": "./dist/types.cjs"
     }
   },
   "files": ["dist"],
