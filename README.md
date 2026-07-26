@@ -101,4 +101,4 @@ httpDebugger({
 
 ## License
 
-MIT
+MIT — for personal and internal use only. No distribution, sublicensing, or selling permitted.
