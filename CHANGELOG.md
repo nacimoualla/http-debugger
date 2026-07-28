@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+- Added: Embedded web dashboard with real-time SSE updates
+- Added: Factory-isolated `createDashboardEngine()` for multi-instance safety
+- Added: Production guard (dashboard disabled when NODE_ENV=production)
+- Added: Ring buffer for request history (configurable via `dashboard.maxEntries`)
+- Added: Hydration on SSE connect (new clients receive historical entries)
+- Added: Teardown on disconnect (prevents memory leaks)
+- Added: Dashboard option to all adapters (Express, Fastify, Hono)
+
 ## 1.1.1
 - Fixed: JSR publishing workflow
 - Added: JSDoc documentation for all exported symbols
