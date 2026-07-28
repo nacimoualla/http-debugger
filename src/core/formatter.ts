@@ -115,6 +115,13 @@ function generateCurl(entry: DebugEntry): string {
   return curl;
 }
 
+/**
+ * Formats a debug entry into a human-readable terminal string.
+ *
+ * @param entry - The captured request/response data.
+ * @param options - Formatting options (colors, sanitize, maxDepth, maxArrayItems, curl).
+ * @returns Formatted string ready for console output.
+ */
 export function formatEntry(
   entry: DebugEntry,
   options: Pick<

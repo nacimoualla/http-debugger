@@ -1,14 +1,26 @@
 import { randomUUID } from 'node:crypto';
 
+/** Result of capturing a request or response body. */
+export interface CaptureResult {
+  /** The parsed body, or null if empty/truncated. */
+  body: unknown;
+  /** Whether the body exceeded maxBodySize and was truncated. */
+  truncated: boolean;
+}
+
+/** Generates a unique UUID for each request. */
 export function generateId(): string {
   return randomUUID();
 }
 
-export interface CaptureResult {
-  body: unknown;
-  truncated: boolean;
-}
-
+/**
+ * Captures and parses a request body from raw stream chunks.
+ *
+ * @param chunks - Raw body chunks collected from the request stream.
+ * @param contentType - The Content-Type header value for JSON detection.
+ * @param maxBodySize - Max bytes to capture before truncating (default: 1024).
+ * @returns The parsed body and whether it was truncated.
+ */
 export function captureRequestBody(
   chunks: Buffer[],
   contentType: string,
@@ -37,6 +49,13 @@ export function captureRequestBody(
   return { body: str, truncated: false };
 }
 
+/**
+ * Captures and parses a response body from raw stream chunks.
+ *
+ * @param chunks - Raw body chunks collected from the response stream.
+ * @param maxBodySize - Max bytes to capture before truncating (default: 1024).
+ * @returns The parsed body and whether it was truncated.
+ */
 export function captureResponseBody(chunks: Buffer[], maxBodySize: number = 1024): CaptureResult {
   if (chunks.length === 0) return { body: null, truncated: false };
 
