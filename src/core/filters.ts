@@ -30,7 +30,10 @@ function parseSize(value: string): { op: string; bytes: number } | null {
   const m = value.trim().match(/^([<>=!]=?)\s*(\d+(?:\.\d+)?)\s*(B|KB|MB|GB)?$/i);
   if (!m) return null;
   const [, op, num, unit] = m;
-  const mult = { b: 1, kb: 1024, mb: 1024 * 1024, gb: 1024 * 1024 * 1024 }[(unit || 'b').toLowerCase()];
+  const unitKey = (unit || 'b').toLowerCase();
+  const multipliers: Record<string, number> = { b: 1, kb: 1024, mb: 1024 * 1024, gb: 1024 * 1024 * 1024 };
+  const mult = multipliers[unitKey];
+  if (mult === undefined) return null;
   return { op, bytes: Number(num) * mult };
 }
 
