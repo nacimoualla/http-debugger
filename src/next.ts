@@ -1,13 +1,47 @@
-import type { MiddlewareOptions, DebugEntry } from './types.js';
-import { engine, getDashboardOptions } from './core/singleton.js';
+import type { MiddlewareOptions, DashboardOptions, DebugEntry } from './types.js';
+import { engine, setDashboardOptions, getDashboardOptions } from './core/singleton.js';
 import { readBodyWithLimit } from './core/stream.js';
 import { createTiming } from './core/timing.js';
 import { generateId } from './core/capture.js';
 import { formatEntry } from './core/formatter.js';
+import { DASHBOARD_HTML } from './core/dashboard.js';
 
-export function dashboardRoute(options?: { maxEntries?: number }): (req: Request) => Response {
-  return (_req: Request): Response => {
-    return new Response('Dashboard route not yet implemented', { status: 501 });
+export function dashboardRoute(
+  options?: DashboardOptions,
+): (req: Request) => Promise<Response> {
+  if (options) {
+    setDashboardOptions(options);
+  }
+
+  return async (req: Request): Promise<Response> => {
+    const url = new URL(req.url);
+    const path = url.pathname;
+
+    if (path.endsWith('/stream')) {
+      let teardown: (() => void) | undefined;
+      const stream = new ReadableStream({
+        start(controller) {
+          const sendFn = (chunk: string) => {
+            controller.enqueue(new TextEncoder().encode(chunk));
+          };
+          teardown = engine.addClientWithHistory(sendFn);
+        },
+        cancel() {
+          teardown?.();
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
+
+    return new Response(DASHBOARD_HTML, {
+      headers: { 'Content-Type': 'text/html' },
+    });
   };
 }
 

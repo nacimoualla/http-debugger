@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { withHttpDebugger } from '../../src/next.js';
-import { engine } from '../../src/core/singleton.js';
+import { withHttpDebugger, dashboardRoute } from '../../src/next.js';
+import { engine, getDashboardOptions } from '../../src/core/singleton.js';
 
 describe('withHttpDebugger', () => {
   let capturedOutput: string[];
@@ -146,5 +146,31 @@ describe('withHttpDebugger', () => {
     // Response should return immediately (under 50ms), not blocked by body capture
     expect(elapsed).toBeLessThan(50);
     expect(res.status).toBe(200);
+  });
+});
+
+describe('dashboardRoute', () => {
+  it('serves HTML at __debugger path', async () => {
+    const handler = dashboardRoute();
+    const req = new Request('http://localhost/__debugger');
+    const res = await handler(req);
+    expect(res.headers.get('content-type')).toBe('text/html');
+    const html = await res.text();
+    expect(html).toContain('http-debugger');
+  });
+
+  it('serves SSE at __debugger/stream path', async () => {
+    const handler = dashboardRoute();
+    const req = new Request('http://localhost/__debugger/stream');
+    const res = await handler(req);
+    expect(res.headers.get('content-type')).toBe('text/event-stream');
+    expect(res.headers.get('cache-control')).toBe('no-cache');
+  });
+
+  it('configures engine options', async () => {
+    dashboardRoute({ maxDepth: 6, sanitize: false });
+    const opts = getDashboardOptions();
+    expect(opts.maxDepth).toBe(6);
+    expect(opts.sanitize).toBe(false);
   });
 });
