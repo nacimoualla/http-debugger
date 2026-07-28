@@ -3,14 +3,36 @@ import type { MiddlewareOptions, DebugEntry } from '../types.js';
 import { createTiming, Timing } from '../core/timing.js';
 import { generateId } from '../core/capture.js';
 import { formatEntry } from '../core/formatter.js';
+import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
 
 export const httpDebugger: FastifyPluginAsync<MiddlewareOptions> = async (fastify, options) => {
   const maxBodySize = options.maxBodySize ?? 1024;
+  const engine = createDashboardEngine(
+    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+  );
 
   fastify.decorateRequest('httpDebuggerTiming', null);
   fastify.decorateRequest('httpDebuggerId', null);
 
-  fastify.addHook('onRequest', async (request: FastifyRequest) => {
+  fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (engine.isEnabled) {
+      if (request.url === '/__debugger') {
+        reply.header('Content-Type', 'text/html');
+        reply.send(DASHBOARD_HTML);
+        return reply;
+      }
+      if (request.url === '/__debugger/stream') {
+        reply.raw.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        });
+        const teardown = engine.addClientWithHistory((chunk) => reply.raw.write(chunk));
+        request.raw.on('close', teardown);
+        return reply;
+      }
+    }
+
     const timing = createTiming();
     const id = generateId();
 
@@ -88,6 +110,10 @@ export const httpDebugger: FastifyPluginAsync<MiddlewareOptions> = async (fastif
           curl: options.curl,
         }),
       );
+
+      if (engine.isEnabled) {
+        engine.addEntry(entry);
+      }
     },
   );
 };
