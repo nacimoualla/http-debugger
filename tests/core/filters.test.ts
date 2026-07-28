@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseFilters, applyFilters, CompiledPredicate } from '../../src/core/filters.js';
+import { parseFilters, applyFilters } from '../../src/core/filters.js';
 import type { DebugEntry } from '../../src/types.js';
 
 function entry(overrides: Partial<DebugEntry> = {}): DebugEntry {
