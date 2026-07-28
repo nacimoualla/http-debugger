@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+- Added: 50+ npm keywords for discoverability (Express/Fastify/Hono/Next.js middleware, API debugging, HTTP inspection, debugging tools)
+- Fixed: TypeScript strict mode type error in `parseSize` function
+
 ## 1.4.0
 - Added: Advanced filter toolbar (method, status, duration, size, date range)
 - Added: HAR export with Full (HAR 1.2) and Minimal modes

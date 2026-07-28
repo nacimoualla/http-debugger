@@ -1,6 +1,6 @@
 {
   "name": "@nacimoualla/http-debugger",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "exports": "./src/index.ts",
   "license": "MIT",
   "description": "Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge. Captures request/response data at the stream level with smart body truncation, cURL generation, and framework adapters for Express, Fastify, and Hono."
