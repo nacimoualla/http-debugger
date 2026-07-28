@@ -1,8 +1,16 @@
 {
   "name": "http-debugger",
   "version": "1.1.0",
-  "description": "Lightweight HTTP debug middleware with terminal UI",
+  "description": "Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge. Stream-level request capture, smart body truncation, cURL generation, and framework adapters for Express, Fastify, and Hono.",
   "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nacimoualla/http-debugger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nacimoualla/http-debugger/issues"
+  },
+  "homepage": "https://github.com/nacimoualla/http-debugger#readme",
   "keywords": [
     "http",
     "debug",
@@ -18,7 +26,20 @@
     "stream",
     "inspect",
     "devtools",
-    "development"
+    "development",
+    "debugger",
+    "curl",
+    "truncation",
+    "body",
+    "headers",
+    "timing",
+    "performance",
+    "node",
+    "deno",
+    "bun",
+    "edge",
+    "cloudflare",
+    "workers"
   ],
   "type": "module",
   "main": "./dist/index.cjs",
