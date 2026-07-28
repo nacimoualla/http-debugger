@@ -128,14 +128,21 @@ describe('DashboardEngine extended API', () => {
 
   it('setMaxEntries caps buffer and evicts oldest', () => {
     engine.setMaxEntries(100);
-    engine.addEntry(createEntry({ id: '1' }));
-    engine.addEntry(createEntry({ id: '2' }));
-    engine.addEntry(createEntry({ id: '3' }));
-    engine.addEntry(createEntry({ id: '4' }));
-    engine.addEntry(createEntry({ id: '5' }));
-    engine.setMaxEntries(100); // no change
-    expect(engine.getAllEntries().length).toBe(5);
-    expect(() => engine.setMaxEntries(3)).toThrow('min 100');
+    // Add 150 entries (exceeds maxEntries=100 from createDashboardEngine(10) - wait, maxEntries is 10
+    // Let's use a larger maxEntries to test eviction
+    engine.setMaxEntries(150);
+    for (let i = 1; i <= 200; i++) {
+      engine.addEntry(createEntry({ id: String(i) }));
+    }
+    expect(engine.getAllEntries().length).toBe(150); // capped at 150
+
+    // Reduce maxEntries to force eviction
+    engine.setMaxEntries(100);
+    const entries = engine.getAllEntries();
+    expect(entries.length).toBe(100);
+    // Oldest 100 entries should be evicted, so we should have entries 101-200
+    expect(entries[0].id).toBe('101');
+    expect(entries[99].id).toBe('200');
   });
 
   it('setMaxEntries throws on invalid values', () => {
@@ -144,11 +151,18 @@ describe('DashboardEngine extended API', () => {
   });
 
   it('setMaxEntries works at runtime with valid values', () => {
+    engine.setMaxEntries(150);
+    for (let i = 1; i <= 120; i++) {
+      engine.addEntry(createEntry({ id: String(i) }));
+    }
+    expect(engine.getAllEntries().length).toBe(120);
+
+    // Reduce maxEntries at runtime - should evict oldest
     engine.setMaxEntries(100);
-    engine.addEntry(createEntry({ id: '1' }));
-    engine.addEntry(createEntry({ id: '2' }));
-    engine.addEntry(createEntry({ id: '3' }));
-    engine.setMaxEntries(100);
-    expect(engine.getAllEntries().length).toBe(3);
+    const entries = engine.getAllEntries();
+    expect(entries.length).toBe(100);
+    // Oldest 20 entries (1-20) should be evicted, keeping 21-120
+    expect(entries[0].id).toBe('21');
+    expect(entries[99].id).toBe('120');
   });
 });
