@@ -43,7 +43,7 @@ Stop writing `console.log(req.body)` and stop switching to Postman to replay fai
 * **Instant Replay:** Automatically generates ready-to-paste cURL commands for failed requests.
 * **No Terminal Spam:** Smart body truncation collapses deep JSON objects and massive arrays so your terminal stays readable.
 * **Zero Dependencies:** A tiny footprint that won't bloat your `node_modules`.
-* **Framework Native:** Ships with optimized adapters for Express, Fastify, and Hono.
+* **Framework Native:** Ships with optimized adapters for Express, Fastify, Hono, and Next.js.
 * **Edge Ready:** The Hono adapter relies strictly on WinterCG standard Web APIs (`performance.now()`, `ReadableStream`), making it fully compatible with Cloudflare Workers, Deno, and Bun.
 
 ## Installation
@@ -84,6 +84,28 @@ import { httpDebugger } from 'http-debugger/hono';
 
 const app = new Hono();
 app.use('*', httpDebugger());
+```
+
+### Next.js (App Router)
+
+```typescript
+// app/api/users/route.ts
+import { withHttpDebugger } from 'http-debugger/next';
+
+async function handler(req: Request) {
+  return Response.json({ users: [] });
+}
+
+export const GET = withHttpDebugger(handler);
+```
+
+Mount the dashboard:
+
+```typescript
+// app/__debugger/[[...route]]/route.ts
+import { dashboardRoute } from 'http-debugger/next';
+
+export const GET = dashboardRoute({ maxDepth: 4, sanitize: true });
 ```
 
 ## Configuration
@@ -143,6 +165,7 @@ httpDebugger({
 | Express | ✅ | ✅ | ✅ |
 | Fastify | ✅ | ❌ | ✅ |
 | Hono / Edge | ✅ | ❌ | ❌ |
+| Next.js (App Router) | ✅ | ❌ | ❌ |
 
 **Morgan** is great for access logs in production, but it doesn't capture request/response bodies and has no truncation or cURL output.
 
@@ -169,12 +192,16 @@ export { createTiming } from 'http-debugger';
 export { generateId, captureRequestBody, captureResponseBody } from 'http-debugger';
 export { formatEntry } from 'http-debugger';
 export { sanitizeHeaders } from 'http-debugger';
-export type { DebugEntry, TimingInfo, MiddlewareOptions, CaptureResult } from 'http-debugger';
+export { createDashboardEngine, DASHBOARD_HTML } from 'http-debugger';
+export type { DebugEntry, TimingInfo, MiddlewareOptions, CaptureResult, DashboardOptions } from 'http-debugger';
 
 // Adapters
 import { httpDebugger } from 'http-debugger/express';
 import { httpDebugger } from 'http-debugger/fastify';
 import { httpDebugger } from 'http-debugger/hono';
+
+// Next.js
+import { withHttpDebugger, dashboardRoute } from 'http-debugger/next';
 ```
 
 ## License

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+- Added: Next.js App Router adapter with HOF wrapper (`withHttpDebugger`)
+- Added: Catch-all dashboard route for Next.js (`dashboardRoute`)
+- Added: Singleton engine with `globalThis` for HMR survival
+- Added: `DashboardOptions` type extending `MiddlewareOptions`
+- Added: `readBodyWithLimit` utility for Web Streams
+- Added: Non-blocking response capture for streaming support (SSE, AI text streams)
+
 ## 1.2.1
 - Fixed: Added explicit types for JSR slow type compliance
 
