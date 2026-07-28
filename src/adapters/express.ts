@@ -84,7 +84,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
           }
         }
       }
-      return originalWrite(chunk, ...args as []);
+      return originalWrite(chunk, ...(args as []));
     } as typeof res.write;
 
     res.end = function (chunk?: Buffer | string | Uint8Array, ...args: unknown[]) {
@@ -108,7 +108,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
           }
         }
       }
-      return originalEnd(chunk, ...args as []);
+      return originalEnd(chunk, ...(args as []));
     } as typeof res.end;
 
     res.on('finish', () => {
@@ -117,7 +117,11 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
 
       timing.markResponseEnd();
 
-      const reqCapture = captureRequestBody(requestChunks, req.headers['content-type'] || '', maxBodySize);
+      const reqCapture = captureRequestBody(
+        requestChunks,
+        req.headers['content-type'] || '',
+        maxBodySize,
+      );
       const resCapture = captureResponseBody(responseChunks, maxBodySize);
 
       const entry = {
@@ -145,13 +149,15 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
 
       if (options.filter && !options.filter(entry)) return;
 
-      console.log(formatEntry(entry, {
-        colors: options.colors,
-        sanitize: options.sanitize,
-        maxDepth: options.maxDepth,
-        maxArrayItems: options.maxArrayItems,
-        curl: options.curl,
-      }));
+      console.log(
+        formatEntry(entry, {
+          colors: options.colors,
+          sanitize: options.sanitize,
+          maxDepth: options.maxDepth,
+          maxArrayItems: options.maxArrayItems,
+          curl: options.curl,
+        }),
+      );
     });
 
     next();

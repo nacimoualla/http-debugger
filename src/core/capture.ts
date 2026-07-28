@@ -12,7 +12,7 @@ export interface CaptureResult {
 export function captureRequestBody(
   chunks: Buffer[],
   contentType: string,
-  maxBodySize: number = 1024
+  maxBodySize: number = 1024,
 ): CaptureResult {
   if (chunks.length === 0) return { body: null, truncated: false };
 
@@ -37,10 +37,7 @@ export function captureRequestBody(
   return { body: str, truncated: false };
 }
 
-export function captureResponseBody(
-  chunks: Buffer[],
-  maxBodySize: number = 1024
-): CaptureResult {
+export function captureResponseBody(chunks: Buffer[], maxBodySize: number = 1024): CaptureResult {
   if (chunks.length === 0) return { body: null, truncated: false };
 
   const buffer = Buffer.concat(chunks);

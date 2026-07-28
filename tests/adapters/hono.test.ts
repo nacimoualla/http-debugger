@@ -32,9 +32,9 @@ describe('httpDebugger Hono adapter', () => {
     const res = await app.request('/test');
     expect(res.status).toBe(200);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('GET /test'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('200'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('GET /test'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('200'))).toBe(true);
   });
 
   it('captures request body', async () => {
@@ -51,9 +51,9 @@ describe('httpDebugger Hono adapter', () => {
 
     expect(res.status).toBe(201);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('POST /users'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('"name": "Alice"'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('POST /users'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('"name": "Alice"'))).toBe(true);
   });
 
   it('sanitizes Authorization header', async () => {
@@ -67,9 +67,9 @@ describe('httpDebugger Hono adapter', () => {
 
     expect(res.status).toBe(200);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('***'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('secret123'))).toBe(false);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('***'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('secret123'))).toBe(false);
   });
 
   it('captures cURL command when enabled', async () => {
@@ -83,8 +83,8 @@ describe('httpDebugger Hono adapter', () => {
     const res = await curlApp.request('/test');
     expect(res.status).toBe(200);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('curl:'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('curl:'))).toBe(true);
   });
 
   it('handles null body (GET request)', async () => {
@@ -95,7 +95,7 @@ describe('httpDebugger Hono adapter', () => {
     const res = await app.request('/no-body');
     expect(res.status).toBe(200);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('GET /no-body'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('GET /no-body'))).toBe(true);
   });
 });

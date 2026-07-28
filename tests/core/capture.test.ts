@@ -19,10 +19,7 @@ describe('captureRequestBody', () => {
   });
 
   it('handles chunked JSON (multiple chunks)', () => {
-    const chunks = [
-      Buffer.from('{"name":'),
-      Buffer.from('"test"}'),
-    ];
+    const chunks = [Buffer.from('{"name":'), Buffer.from('"test"}')];
     const result = captureRequestBody(chunks, 'application/json');
     expect(result.body).toEqual({ name: 'test' });
     expect(result.truncated).toBe(false);
@@ -66,10 +63,7 @@ describe('captureResponseBody', () => {
   });
 
   it('handles chunked response', () => {
-    const chunks = [
-      Buffer.from('{"id":'),
-      Buffer.from('1}'),
-    ];
+    const chunks = [Buffer.from('{"id":'), Buffer.from('1}')];
     const result = captureResponseBody(chunks, 1024);
     expect(result.body).toEqual({ id: 1 });
     expect(result.truncated).toBe(false);

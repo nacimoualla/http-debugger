@@ -50,9 +50,9 @@ describe('httpDebugger Express adapter', () => {
     await fetch(`http://localhost:${port}/test`);
     await waitForLog();
 
-    expect(capturedOutput.some(o => o.includes('GET /test'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('200'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('"ok": true'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('GET /test'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('200'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('"ok": true'))).toBe(true);
   });
 
   it('captures res.send() response', async () => {
@@ -64,8 +64,8 @@ describe('httpDebugger Express adapter', () => {
     await fetch(`http://localhost:${port}/html`);
     await waitForLog();
 
-    expect(capturedOutput.some(o => o.includes('GET /html'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('<h1>Hello</h1>'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('GET /html'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('<h1>Hello</h1>'))).toBe(true);
   });
 
   it('captures res.sendStatus() response', async () => {
@@ -77,7 +77,7 @@ describe('httpDebugger Express adapter', () => {
     await fetch(`http://localhost:${port}/no-content`);
     await waitForLog();
 
-    expect(capturedOutput.some(o => o.includes('204'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('204'))).toBe(true);
   });
 
   it('captures res.write() + res.end() response', async () => {
@@ -92,8 +92,8 @@ describe('httpDebugger Express adapter', () => {
     await fetch(`http://localhost:${port}/stream`);
     await waitForLog();
 
-    expect(capturedOutput.some(o => o.includes('GET /stream'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('chunk1chunk2chunk3'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('GET /stream'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('chunk1chunk2chunk3'))).toBe(true);
   });
 
   it('captures request body from raw stream (no body-parser)', async () => {
@@ -109,9 +109,9 @@ describe('httpDebugger Express adapter', () => {
     });
     await waitForLog();
 
-    expect(capturedOutput.some(o => o.includes('POST /users'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('"name": "Alice"'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('201'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('POST /users'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('"name": "Alice"'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('201'))).toBe(true);
   });
 
   it('sanitizes Authorization header', async () => {
@@ -125,8 +125,8 @@ describe('httpDebugger Express adapter', () => {
     });
     await waitForLog();
 
-    expect(capturedOutput.some(o => o.includes('***'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('secret123'))).toBe(false);
+    expect(capturedOutput.some((o) => o.includes('***'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('secret123'))).toBe(false);
   });
 
   it('reports 500 errors', async () => {
@@ -138,8 +138,8 @@ describe('httpDebugger Express adapter', () => {
     await fetch(`http://localhost:${port}/error`);
     await waitForLog();
 
-    expect(capturedOutput.some(o => o.includes('500'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('"error": "fail"'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('500'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('"error": "fail"'))).toBe(true);
   });
 
   it('does not crash the request on internal errors', async () => {
@@ -165,6 +165,6 @@ describe('httpDebugger Express adapter', () => {
     await waitForLog();
 
     expect(response.status).toBe(200);
-    expect(capturedOutput.some(o => o.includes('[truncated'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('[truncated'))).toBe(true);
   });
 });

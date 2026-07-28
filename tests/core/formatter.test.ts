@@ -137,7 +137,7 @@ describe('formatEntry', () => {
     const entry = createMockEntry();
     const output = formatEntry(entry, { colors: false, curl: true });
     expect(output).toContain('curl:');
-    expect(output).toContain("curl -X GET");
+    expect(output).toContain('curl -X GET');
   });
 
   it('hides cURL line when curl is false', () => {

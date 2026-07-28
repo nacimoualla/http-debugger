@@ -6,9 +6,9 @@ import { formatEntry } from '../core/formatter.js';
 
 const isTTY = (() => {
   try {
-    return typeof process !== 'undefined'
-      && process.stdout != null
-      && process.stdout.isTTY === true;
+    return (
+      typeof process !== 'undefined' && process.stdout != null && process.stdout.isTTY === true
+    );
   } catch {
     return false;
   }
@@ -16,7 +16,7 @@ const isTTY = (() => {
 
 async function readBodyWithLimit(
   stream: ReadableStream | null,
-  maxBodySize: number
+  maxBodySize: number,
 ): Promise<{ body: string; truncated: boolean }> {
   if (!stream) return { body: '', truncated: false };
 
@@ -67,7 +67,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
     const reqClone = c.req.raw.clone();
     const { body: reqBodyStr, truncated: reqTruncated } = await readBodyWithLimit(
       reqClone.body,
-      maxBodySize
+      maxBodySize,
     );
 
     let reqBody: unknown = null;
@@ -95,7 +95,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
     const resClone = c.res.clone();
     const { body: resBodyStr, truncated: resTruncated } = await readBodyWithLimit(
       resClone.body,
-      maxBodySize
+      maxBodySize,
     );
 
     let resBody: unknown = null;
@@ -134,13 +134,15 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
 
     if (options.filter && !options.filter(entry)) return;
 
-    console.log(formatEntry(entry, {
-      colors: useColors,
-      sanitize: options.sanitize,
-      maxDepth: options.maxDepth,
-      maxArrayItems: options.maxArrayItems,
-      curl: options.curl,
-    }));
+    console.log(
+      formatEntry(entry, {
+        colors: useColors,
+        sanitize: options.sanitize,
+        maxDepth: options.maxDepth,
+        maxArrayItems: options.maxArrayItems,
+        curl: options.curl,
+      }),
+    );
   };
 }
 

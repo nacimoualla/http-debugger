@@ -36,7 +36,7 @@ function createDepthReplacer(maxDepth: number, maxArrayItems: number) {
     if (Array.isArray(value) && value.length > maxArrayItems) {
       const first = value.slice(0, maxArrayItems);
       const rest = value.length - maxArrayItems;
-      const firstStr = first.map(i => JSON.stringify(i, replacer)).join(', ');
+      const firstStr = first.map((i) => JSON.stringify(i, replacer)).join(', ');
       return `[${firstStr}, ... ${rest} more]`;
     }
 
@@ -66,7 +66,12 @@ function getObjectDepth(obj: unknown): number {
   return depth;
 }
 
-function formatBody(body: unknown, maxDepth: number, maxArrayItems: number, truncated: boolean): string {
+function formatBody(
+  body: unknown,
+  maxDepth: number,
+  maxArrayItems: number,
+  truncated: boolean,
+): string {
   if (truncated) return '[truncated]';
   if (body === null || body === undefined) return '';
   if (typeof body === 'string') return body;
@@ -112,7 +117,10 @@ function generateCurl(entry: DebugEntry): string {
 
 export function formatEntry(
   entry: DebugEntry,
-  options: Pick<MiddlewareOptions, 'colors' | 'sanitize' | 'maxDepth' | 'maxArrayItems' | 'curl'> = {}
+  options: Pick<
+    MiddlewareOptions,
+    'colors' | 'sanitize' | 'maxDepth' | 'maxArrayItems' | 'curl'
+  > = {},
 ): string {
   const useColors = options.colors !== false;
   const useSanitize = options.sanitize !== false;
@@ -122,15 +130,14 @@ export function formatEntry(
 
   const lines: string[] = [];
 
-  const methodColor = request.method === 'GET' || request.method === 'HEAD'
-    ? ansi.cyan
-    : request.method === 'DELETE'
-      ? ansi.yellow
-      : ansi.green;
+  const methodColor =
+    request.method === 'GET' || request.method === 'HEAD'
+      ? ansi.cyan
+      : request.method === 'DELETE'
+        ? ansi.yellow
+        : ansi.green;
 
-  lines.push(
-    `${colorize('→', methodColor, useColors)} ${request.method} ${request.path}`
-  );
+  lines.push(`${colorize('→', methodColor, useColors)} ${request.method} ${request.path}`);
 
   const reqHeaders = sanitizeHeaders(request.headers, useSanitize);
   if (Object.keys(reqHeaders).length > 0) {
@@ -146,15 +153,12 @@ export function formatEntry(
 
   lines.push('');
 
-  const statusColor = response.statusCode < 300
-    ? ansi.green
-    : response.statusCode < 400
-      ? ansi.yellow
-      : ansi.red;
+  const statusColor =
+    response.statusCode < 300 ? ansi.green : response.statusCode < 400 ? ansi.yellow : ansi.red;
 
   const statusText = STATUS_TEXT[response.statusCode] || '';
   lines.push(
-    `${colorize('←', statusColor, useColors)} ${response.statusCode} ${statusText} (${formatDuration(duration)})`
+    `${colorize('←', statusColor, useColors)} ${response.statusCode} ${statusText} (${formatDuration(duration)})`,
   );
 
   if (Object.keys(response.headers).length > 0) {
@@ -178,8 +182,8 @@ export function formatEntry(
   lines.push(`    Handler:   ${formatTimingValue(timing.handlerEnd, timing.handlerStart)}`);
   lines.push(`    Response:  ${formatTimingValue(timing.responseEnd, timing.responseStart)}`);
 
-  const shouldShowCurl = options.curl === true ||
-    (typeof options.curl === 'function' && options.curl(entry));
+  const shouldShowCurl =
+    options.curl === true || (typeof options.curl === 'function' && options.curl(entry));
 
   if (shouldShowCurl) {
     lines.push('');

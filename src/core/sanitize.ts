@@ -1,13 +1,8 @@
-const SENSITIVE_HEADERS = new Set([
-  'authorization',
-  'cookie',
-  'set-cookie',
-  'proxy-authorization',
-]);
+const SENSITIVE_HEADERS = new Set(['authorization', 'cookie', 'set-cookie', 'proxy-authorization']);
 
 export function sanitizeHeaders(
   headers: Record<string, string>,
-  enabled: boolean = true
+  enabled: boolean = true,
 ): Record<string, string> {
   if (!enabled) return headers;
 

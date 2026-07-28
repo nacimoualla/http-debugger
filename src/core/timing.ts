@@ -27,19 +27,45 @@ export function createTiming(): Timing {
   let responseEnd = 0;
 
   const timing: Timing = {
-    get headersReceived() { return headersReceived - start; },
-    get bodyComplete() { return bodyComplete - start; },
-    get handlerStart() { return handlerStart - start; },
-    get handlerEnd() { return handlerEnd - start; },
-    get responseStart() { return responseStart - start; },
-    get responseEnd() { return responseEnd - start; },
-    get duration() { return responseEnd > 0 ? responseEnd - start : 0; },
-    markHeadersReceived() { headersReceived = performance.now(); },
-    markBodyComplete() { bodyComplete = performance.now(); },
-    markHandlerStart() { handlerStart = performance.now(); },
-    markHandlerEnd() { handlerEnd = performance.now(); },
-    markResponseStart() { responseStart = performance.now(); },
-    markResponseEnd() { responseEnd = performance.now(); },
+    get headersReceived() {
+      return headersReceived - start;
+    },
+    get bodyComplete() {
+      return bodyComplete - start;
+    },
+    get handlerStart() {
+      return handlerStart - start;
+    },
+    get handlerEnd() {
+      return handlerEnd - start;
+    },
+    get responseStart() {
+      return responseStart - start;
+    },
+    get responseEnd() {
+      return responseEnd - start;
+    },
+    get duration() {
+      return responseEnd > 0 ? responseEnd - start : 0;
+    },
+    markHeadersReceived() {
+      headersReceived = performance.now();
+    },
+    markBodyComplete() {
+      bodyComplete = performance.now();
+    },
+    markHandlerStart() {
+      handlerStart = performance.now();
+    },
+    markHandlerEnd() {
+      handlerEnd = performance.now();
+    },
+    markResponseStart() {
+      responseStart = performance.now();
+    },
+    markResponseEnd() {
+      responseEnd = performance.now();
+    },
     toJSON(): TimingInfo {
       return {
         headersReceived: headersReceived - start,

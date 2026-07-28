@@ -36,9 +36,9 @@ describe('httpDebugger Fastify adapter', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ ok: true });
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('GET /test'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('200'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('GET /test'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('200'))).toBe(true);
   });
 
   it('captures request body', async () => {
@@ -55,9 +55,9 @@ describe('httpDebugger Fastify adapter', () => {
 
     expect(response.statusCode).toBe(200);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('POST /users'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('"name": "Alice"'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('POST /users'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('"name": "Alice"'))).toBe(true);
   });
 
   it('sanitizes Authorization header', async () => {
@@ -74,9 +74,9 @@ describe('httpDebugger Fastify adapter', () => {
 
     expect(response.statusCode).toBe(200);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('***'))).toBe(true);
-    expect(capturedOutput.some(o => o.includes('secret123'))).toBe(false);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('***'))).toBe(true);
+    expect(capturedOutput.some((o) => o.includes('secret123'))).toBe(false);
   });
 
   it('reports 500 errors', async () => {
@@ -89,8 +89,8 @@ describe('httpDebugger Fastify adapter', () => {
 
     expect(response.statusCode).toBe(500);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('500'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('500'))).toBe(true);
   });
 
   it('captures cURL command when enabled', async () => {
@@ -106,8 +106,8 @@ describe('httpDebugger Fastify adapter', () => {
 
     expect(response.statusCode).toBe(200);
 
-    await new Promise(r => setTimeout(r, 150));
-    expect(capturedOutput.some(o => o.includes('curl:'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 150));
+    expect(capturedOutput.some((o) => o.includes('curl:'))).toBe(true);
     await curlApp.close();
   });
 });
