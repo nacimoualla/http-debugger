@@ -129,6 +129,19 @@ httpDebugger({
 3. A safety valve stops collecting once `maxBodySize` is reached — the stream continues flowing unmodified, so large responses (files, video, downloads) never cause memory issues.
 4. On response `finish`, it builds a `DebugEntry` with request, response, and timing data, then formats and logs it.
 
+## Contributing
+
+Contributions welcome! See the [contributing guide](docs/contributing.md) for setup, code style, and how to add a new adapter.
+
+Quick start:
+
+```bash
+git clone https://github.com/nacimoualla/http-debugger.git
+cd http-debugger
+npm install
+npm test
+```
+
 ## Exports
 
 ```typescript
