@@ -78,4 +78,6 @@ export interface MiddlewareOptions {
   colors?: boolean;
   /** Show cURL command. Pass true for always, or a function for conditional output. */
   curl?: boolean | ((entry: DebugEntry) => boolean);
+  /** Enable the web dashboard. Pass true or { maxEntries: number }. */
+  dashboard?: boolean | { maxEntries?: number };
 }
