@@ -4,6 +4,7 @@
 [![CI](https://github.com/nacimoualla/http-debugger/actions/workflows/ci.yml/badge.svg)](https://github.com/nacimoualla/http-debugger/actions/workflows/ci.yml)
 [![License](https://img.shields.io/npm/l/http-debugger.svg)](./LICENSE)
 [![Downloads](https://img.shields.io/npm/dm/http-debugger.svg)](https://www.npmjs.com/package/http-debugger)
+[![Docs](https://img.shields.io/badge/docs-live-brightgreen)](https://nacimoualla.github.io/http-debugger/)
 
 **Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge.**
 
