@@ -165,3 +165,5 @@ export function createDashboardEngine(maxEntries: number = 100): {
     },
   };
 }
+
+export type DashboardEngine = ReturnType<typeof createDashboardEngine>;
