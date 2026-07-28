@@ -129,6 +129,25 @@ httpDebugger({
 3. A safety valve stops collecting once `maxBodySize` is reached — the stream continues flowing unmodified, so large responses (files, video, downloads) never cause memory issues.
 4. On response `finish`, it builds a `DebugEntry` with request, response, and timing data, then formats and logs it.
 
+## Why not Morgan / Pino?
+
+| Feature | http-debugger | Morgan | Pino |
+|---------|:---:|:---:|:---:|
+| Stream-level capture | ✅ | ❌ | ❌ |
+| Request body capture | ✅ | ❌ | ❌ |
+| Response body capture | ✅ | ❌ | ❌ |
+| Body truncation | ✅ | ❌ | ❌ |
+| cURL generation | ✅ | ❌ | ❌ |
+| Zero runtime deps | ✅ | ✅ | ❌ |
+| TypeScript support | ✅ | ❌ | ✅ |
+| Express | ✅ | ✅ | ✅ |
+| Fastify | ✅ | ❌ | ✅ |
+| Hono / Edge | ✅ | ❌ | ❌ |
+
+**Morgan** is great for access logs in production, but it doesn't capture request/response bodies and has no truncation or cURL output.
+
+**Pino** is a high-performance structured logger, but it's a different use case — it requires manual instrumentation and doesn't intercept streams automatically.
+
 ## Contributing
 
 Contributions welcome! See the [contributing guide](docs/contributing.md) for setup, code style, and how to add a new adapter.
