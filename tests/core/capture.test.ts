@@ -11,44 +11,49 @@ describe('generateId', () => {
 });
 
 describe('captureRequestBody', () => {
-  it('parses JSON body from buffer chunks', async () => {
+  it('parses JSON body from buffer chunks', () => {
     const chunks = [Buffer.from('{"name":"test"}')];
-    const result = await captureRequestBody(chunks, 'application/json');
-    expect(result).toEqual({ name: 'test' });
+    const result = captureRequestBody(chunks, 'application/json');
+    expect(result.body).toEqual({ name: 'test' });
+    expect(result.truncated).toBe(false);
   });
 
-  it('handles chunked JSON (multiple chunks)', async () => {
+  it('handles chunked JSON (multiple chunks)', () => {
     const chunks = [
       Buffer.from('{"name":'),
       Buffer.from('"test"}'),
     ];
-    const result = await captureRequestBody(chunks, 'application/json');
-    expect(result).toEqual({ name: 'test' });
+    const result = captureRequestBody(chunks, 'application/json');
+    expect(result.body).toEqual({ name: 'test' });
+    expect(result.truncated).toBe(false);
   });
 
-  it('returns null for empty chunks', async () => {
-    const result = await captureRequestBody([], 'application/json');
-    expect(result).toBeNull();
+  it('returns null body for empty chunks', () => {
+    const result = captureRequestBody([], 'application/json');
+    expect(result.body).toBeNull();
+    expect(result.truncated).toBe(false);
   });
 
-  it('truncates large body based on maxBodySize', async () => {
+  it('sets truncated when body exceeds maxBodySize', () => {
     const largeBody = 'x'.repeat(2048);
     const chunks = [Buffer.from(largeBody)];
-    const result = await captureRequestBody(chunks, 'text/plain', 1024);
-    expect(typeof result).toBe('string');
-    expect(result).toContain('[truncated');
+    const result = captureRequestBody(chunks, 'text/plain', 1024);
+    expect(result.body).toBeNull();
+    expect(result.truncated).toBe(true);
   });
 
-  it('returns raw string for non-JSON content type', async () => {
+  it('returns raw string for non-JSON content type', () => {
     const chunks = [Buffer.from('plain text body')];
-    const result = await captureRequestBody(chunks, 'text/plain');
-    expect(result).toBe('plain text body');
+    const result = captureRequestBody(chunks, 'text/plain');
+    expect(result.body).toBe('plain text body');
+    expect(result.truncated).toBe(false);
   });
 
-  it('handles malformed JSON gracefully', async () => {
+  it('handles malformed JSON gracefully', () => {
     const chunks = [Buffer.from('{invalid json')];
-    const result = await captureRequestBody(chunks, 'application/json');
-    expect(result).toContain('[parse error');
+    const result = captureRequestBody(chunks, 'application/json');
+    expect(result.body).toContain('[parse error');
+    expect(result.truncated).toBe(false);
   });
 });
 
@@ -56,7 +61,8 @@ describe('captureResponseBody', () => {
   it('captures JSON body from chunks', () => {
     const chunks = [Buffer.from('{"id":1}')];
     const result = captureResponseBody(chunks, 1024);
-    expect(result).toEqual({ id: 1 });
+    expect(result.body).toEqual({ id: 1 });
+    expect(result.truncated).toBe(false);
   });
 
   it('handles chunked response', () => {
@@ -65,29 +71,34 @@ describe('captureResponseBody', () => {
       Buffer.from('1}'),
     ];
     const result = captureResponseBody(chunks, 1024);
-    expect(result).toEqual({ id: 1 });
+    expect(result.body).toEqual({ id: 1 });
+    expect(result.truncated).toBe(false);
   });
 
-  it('truncates large response body', () => {
+  it('sets truncated when response exceeds maxBodySize', () => {
     const chunks = [Buffer.from('x'.repeat(2048))];
     const result = captureResponseBody(chunks, 1024);
-    expect(result).toContain('[truncated');
+    expect(result.body).toBeNull();
+    expect(result.truncated).toBe(true);
   });
 
-  it('returns null for empty chunks', () => {
+  it('returns null body for empty chunks', () => {
     const result = captureResponseBody([], 1024);
-    expect(result).toBeNull();
+    expect(result.body).toBeNull();
+    expect(result.truncated).toBe(false);
   });
 
   it('returns raw string for non-JSON', () => {
     const chunks = [Buffer.from('Hello World')];
     const result = captureResponseBody(chunks, 1024);
-    expect(result).toBe('Hello World');
+    expect(result.body).toBe('Hello World');
+    expect(result.truncated).toBe(false);
   });
 
   it('returns binary indicator for non-UTF8 data', () => {
     const chunks = [Buffer.from([0x00, 0x01, 0x02, 0x03])];
     const result = captureResponseBody(chunks, 1024);
-    expect(typeof result).toBe('string');
+    expect(typeof result.body).toBe('string');
+    expect(result.truncated).toBe(false);
   });
 });
