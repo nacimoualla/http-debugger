@@ -1,4 +1,4 @@
-import type { MiddlewareOptions } from './types.js';
+import type { MiddlewareOptions, DebugEntry } from './types.js';
 import { engine, getDashboardOptions } from './core/singleton.js';
 import { readBodyWithLimit } from './core/stream.js';
 import { createTiming } from './core/timing.js';
@@ -76,7 +76,7 @@ export function withHttpDebugger(
 
       timing.markResponseEnd();
 
-      const entry = {
+      const entry: DebugEntry = {
         id,
         timestamp: Date.now(),
         request: {
@@ -114,8 +114,8 @@ export function withHttpDebugger(
         }),
       );
 
-      engine.addEntry(entry as any);
-    })();
+      engine.addEntry(entry);
+    })().catch(() => {});
 
     // Return the original response instantly so streaming works flawlessly
     return res;
