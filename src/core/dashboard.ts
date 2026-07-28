@@ -140,9 +140,16 @@ export function createDashboardEngine(maxEntries: number = 100): {
   isEnabled: boolean;
   addEntry: (entry: DebugEntry) => void;
   addClientWithHistory: (sendFn: (chunk: string) => void) => () => void;
+  getAllEntries: () => DebugEntry[];
+  clear: () => void;
+  pause: () => void;
+  resume: () => void;
+  isPaused: boolean;
+  setMaxEntries: (max: number) => void;
 } {
   const buffer: DebugEntry[] = [];
   const clients = new Set<(chunk: string) => void>();
+  let paused = false;
 
   const isProduction =
     typeof process !== 'undefined' && process.env?.NODE_ENV === 'production';
@@ -150,7 +157,12 @@ export function createDashboardEngine(maxEntries: number = 100): {
   return {
     isEnabled: !isProduction,
 
+    get isPaused(): boolean {
+      return paused;
+    },
+
     addEntry(entry: DebugEntry) {
+      if (paused) return;
       if (buffer.length >= maxEntries) buffer.shift();
       buffer.push(entry);
       const payload = `data: ${JSON.stringify(entry)}\n\n`;
@@ -162,6 +174,29 @@ export function createDashboardEngine(maxEntries: number = 100): {
       sendFn(history);
       clients.add(sendFn);
       return () => clients.delete(sendFn);
+    },
+
+    getAllEntries(): DebugEntry[] {
+      return [...buffer];
+    },
+
+    clear(): void {
+      buffer.length = 0;
+    },
+
+    pause(): void {
+      paused = true;
+    },
+
+    resume(): void {
+      paused = false;
+    },
+
+    setMaxEntries(max: number): void {
+      if (max < 100) throw new Error('maxEntries min 100');
+      if (max > 50000) throw new Error('maxEntries max 50000');
+      maxEntries = max;
+      while (buffer.length > maxEntries) buffer.shift();
     },
   };
 }

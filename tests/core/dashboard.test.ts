@@ -1,5 +1,18 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createDashboardEngine } from '../../src/core/dashboard.js';
+import type { DebugEntry } from '../../src/types.js';
+
+function createEntry(overrides: Partial<DebugEntry> = {}): DebugEntry {
+  return {
+    id: 'test-id',
+    timestamp: Date.now(),
+    request: { method: 'GET', path: '/test', headers: {}, body: null, bodyTruncated: false, query: {}, params: {} },
+    response: { statusCode: 200, headers: {}, body: null, bodyTruncated: false, size: 0 },
+    timing: { headersReceived: 1, bodyComplete: 2, handlerStart: 3, handlerEnd: 10, responseStart: 11, responseEnd: 15 },
+    duration: 15,
+    ...overrides,
+  };
+}
 
 describe('createDashboardEngine', () => {
   let engine: ReturnType<typeof createDashboardEngine>;
@@ -71,5 +84,71 @@ describe('createDashboardEngine', () => {
     engine.addClientWithHistory((chunk) => { received += chunk; });
     expect(received).toContain('"id":"1"');
     expect(received).toContain('"id":"2"');
+  });
+});
+
+describe('DashboardEngine extended API', () => {
+  let engine: ReturnType<typeof createDashboardEngine>;
+
+  beforeEach(() => {
+    engine = createDashboardEngine(10);
+  });
+
+  it('getAllEntries returns all buffered entries', () => {
+    engine.addEntry(createEntry({ id: '1' }));
+    engine.addEntry(createEntry({ id: '2' }));
+    const entries = engine.getAllEntries();
+    expect(entries).toHaveLength(2);
+    expect(entries.map(e => e.id)).toEqual(['1', '2']);
+  });
+
+  it('clear empties the buffer', () => {
+    engine.addEntry(createEntry({ id: '1' }));
+    engine.clear();
+    expect(engine.getAllEntries()).toHaveLength(0);
+  });
+
+  it('pause/resume toggles isPaused', () => {
+    expect(engine.isPaused).toBe(false);
+    engine.pause();
+    expect(engine.isPaused).toBe(true);
+    engine.resume();
+    expect(engine.isPaused).toBe(false);
+  });
+
+  it('entries dropped when paused', () => {
+    engine.addEntry(createEntry({ id: '1' }));
+    engine.pause();
+    engine.addEntry(createEntry({ id: '2' }));
+    engine.resume();
+    engine.addEntry(createEntry({ id: '3' }));
+    const entries = engine.getAllEntries();
+    expect(entries.map(e => e.id)).toEqual(['1', '3']);
+  });
+
+  it('setMaxEntries caps buffer and evicts oldest', () => {
+    engine.setMaxEntries(100);
+    engine.addEntry(createEntry({ id: '1' }));
+    engine.addEntry(createEntry({ id: '2' }));
+    engine.addEntry(createEntry({ id: '3' }));
+    engine.addEntry(createEntry({ id: '4' }));
+    engine.addEntry(createEntry({ id: '5' }));
+    engine.setMaxEntries(100); // no change
+    expect(engine.getAllEntries().length).toBe(5);
+    expect(() => engine.setMaxEntries(3)).toThrow('min 100');
+  });
+
+  it('setMaxEntries throws on invalid values', () => {
+    expect(() => engine.setMaxEntries(50)).toThrow('min 100');
+    expect(() => engine.setMaxEntries(60000)).toThrow('max 50000');
+  });
+
+  it('setMaxEntries works at runtime with valid values', () => {
+    engine.setMaxEntries(100);
+    engine.addEntry(createEntry({ id: '1' }));
+    engine.addEntry(createEntry({ id: '2' }));
+    engine.addEntry(createEntry({ id: '3' }));
+    engine.setMaxEntries(100);
+    expect(engine.getAllEntries().length).toBe(3);
   });
 });
