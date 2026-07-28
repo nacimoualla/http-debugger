@@ -19,6 +19,8 @@ export function setDashboardOptions(options: MiddlewareOptions): void {
   };
   if (process.env.NODE_ENV !== 'production') {
     globalForOptions.__httpDebuggerOptions = options;
+  } else {
+    console.warn('setDashboardOptions is ignored in production');
   }
 }
 

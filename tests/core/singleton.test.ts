@@ -1,11 +1,17 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { engine, setDashboardOptions, getDashboardOptions } from '../../src/core/singleton.js';
+import type { MiddlewareOptions } from '../../src/types.js';
 
 describe('singleton engine', () => {
   const originalEnv = process.env.NODE_ENV;
 
   afterEach(() => {
     process.env.NODE_ENV = originalEnv;
+    // Clear any options set during test
+    const globalForOptions = globalThis as unknown as {
+      __httpDebuggerOptions: MiddlewareOptions | undefined;
+    };
+    globalForOptions.__httpDebuggerOptions = undefined;
   });
 
   it('exports a valid engine', () => {
@@ -30,6 +36,6 @@ describe('singleton engine', () => {
 
   it('returns empty object when no options set', () => {
     const opts = getDashboardOptions();
-    expect(opts).toBeDefined();
+    expect(opts).toEqual({});
   });
 });
