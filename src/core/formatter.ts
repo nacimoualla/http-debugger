@@ -27,10 +27,50 @@ function colorize(text: string, color: string, enabled: boolean): string {
   return enabled ? `${color}${text}${ansi.reset}` : text;
 }
 
-function formatBody(body: unknown): string {
+function createDepthReplacer(maxDepth: number, maxArrayItems: number) {
+  const seen = new WeakSet();
+
+  return function replacer(this: unknown, key: string, value: unknown): unknown {
+    if (key === '') return value;
+
+    if (Array.isArray(value) && value.length > maxArrayItems) {
+      const first = value.slice(0, maxArrayItems);
+      const rest = value.length - maxArrayItems;
+      const firstStr = first.map(i => JSON.stringify(i, replacer)).join(', ');
+      return `[${firstStr}, ... ${rest} more]`;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) return '[Circular]';
+      seen.add(value);
+
+      const depth = this && typeof this === 'object' ? getObjectDepth(this) : 0;
+      if (depth >= maxDepth) {
+        return '[Object]';
+      }
+    }
+
+    return value;
+  };
+}
+
+function getObjectDepth(obj: unknown): number {
+  let depth = 0;
+  let current = obj;
+  while (current && typeof current === 'object') {
+    depth++;
+    const keys = Object.keys(current);
+    if (keys.length === 0) break;
+    current = (current as Record<string, unknown>)[keys[0]];
+  }
+  return depth;
+}
+
+function formatBody(body: unknown, maxDepth: number, maxArrayItems: number): string {
   if (body === null || body === undefined) return '';
   if (typeof body === 'string') return body;
-  return JSON.stringify(body, null, 2);
+  const replacer = createDepthReplacer(maxDepth, maxArrayItems);
+  return JSON.stringify(body, replacer, 2);
 }
 
 function formatSize(bytes: number): string {
@@ -47,12 +87,36 @@ function formatTimingValue(value: number, start: number): string {
   return `${value - start}ms`;
 }
 
+function generateCurl(entry: DebugEntry): string {
+  const { request } = entry;
+  const method = request.method.toUpperCase();
+  const url = request.path.startsWith('http') ? request.path : `http://localhost${request.path}`;
+
+  let curl = `curl -X ${method} '${url}'`;
+
+  const sanitizedHeaders = sanitizeHeaders(request.headers, true);
+  for (const [key, value] of Object.entries(sanitizedHeaders)) {
+    curl += ` -H '${key}: ${value}'`;
+  }
+
+  if (request.bodyTruncated) {
+    curl += ` \\\n    # Warning: Request body was truncated, command may be incomplete`;
+  } else if (request.body !== null && request.body !== undefined) {
+    const bodyStr = typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
+    curl += ` -d '${bodyStr}'`;
+  }
+
+  return curl;
+}
+
 export function formatEntry(
   entry: DebugEntry,
-  options: Pick<MiddlewareOptions, 'colors' | 'sanitize'> = {}
+  options: Pick<MiddlewareOptions, 'colors' | 'sanitize' | 'maxDepth' | 'maxArrayItems' | 'curl'> = {}
 ): string {
   const useColors = options.colors !== false;
   const useSanitize = options.sanitize !== false;
+  const maxDepth = options.maxDepth ?? 4;
+  const maxArrayItems = options.maxArrayItems ?? 10;
   const { request, response, timing, duration } = entry;
 
   const lines: string[] = [];
@@ -74,7 +138,7 @@ export function formatEntry(
     }
   }
 
-  const reqBody = formatBody(request.body);
+  const reqBody = formatBody(request.body, maxDepth, maxArrayItems);
   if (reqBody) {
     lines.push(`  Body: ${reqBody}`);
   }
@@ -98,7 +162,7 @@ export function formatEntry(
     }
   }
 
-  const resBody = formatBody(response.body);
+  const resBody = formatBody(response.body, maxDepth, maxArrayItems);
   if (resBody) {
     lines.push(`  Body: ${resBody}`);
   }
@@ -112,6 +176,14 @@ export function formatEntry(
   lines.push(`    Body Read: ${formatTimingValue(timing.bodyComplete, timing.headersReceived)}`);
   lines.push(`    Handler:   ${formatTimingValue(timing.handlerEnd, timing.handlerStart)}`);
   lines.push(`    Response:  ${formatTimingValue(timing.responseEnd, timing.responseStart)}`);
+
+  const shouldShowCurl = options.curl === true ||
+    (typeof options.curl === 'function' && options.curl(entry));
+
+  if (shouldShowCurl) {
+    lines.push('');
+    lines.push(`  curl: ${generateCurl(entry)}`);
+  }
 
   return lines.join('\n');
 }

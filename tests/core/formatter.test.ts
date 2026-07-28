@@ -5,11 +5,13 @@ import type { DebugEntry } from '../../src/types.js';
 function createMockEntry(overrides?: Partial<DebugEntry>): DebugEntry {
   return {
     id: 'test-id',
+    timestamp: Date.now(),
     request: {
       method: 'GET',
       path: '/api/users',
       headers: { 'content-type': 'application/json' },
       body: null,
+      bodyTruncated: false,
       query: {},
       params: {},
     },
@@ -17,16 +19,16 @@ function createMockEntry(overrides?: Partial<DebugEntry>): DebugEntry {
       statusCode: 200,
       headers: { 'content-type': 'application/json' },
       body: { id: 1 },
+      bodyTruncated: false,
       size: 13,
     },
     timing: {
-      start: 1000,
-      headersReceived: 1001,
-      bodyComplete: 1002,
-      handlerStart: 1003,
-      handlerEnd: 1040,
-      responseStart: 1041,
-      responseEnd: 1045,
+      headersReceived: 1,
+      bodyComplete: 2,
+      handlerStart: 3,
+      handlerEnd: 40,
+      responseStart: 41,
+      responseEnd: 45,
     },
     duration: 45,
     ...overrides,
@@ -107,5 +109,64 @@ describe('formatEntry', () => {
     });
     const output = formatEntry(entry, { colors: false });
     expect(output).not.toContain('Body:');
+  });
+
+  it('collapses deeply nested objects with maxDepth', () => {
+    const entry = createMockEntry({
+      request: {
+        ...createMockEntry().request,
+        body: { a: { b: { c: { d: { e: 'deep' } } } } },
+      },
+    });
+    const output = formatEntry(entry, { colors: false, maxDepth: 3 });
+    expect(output).toContain('[Object]');
+  });
+
+  it('truncates large arrays with maxArrayItems', () => {
+    const entry = createMockEntry({
+      request: {
+        ...createMockEntry().request,
+        body: { items: Array.from({ length: 20 }, (_, i) => ({ id: i })) },
+      },
+    });
+    const output = formatEntry(entry, { colors: false, maxArrayItems: 5 });
+    expect(output).toContain('... 15 more');
+  });
+
+  it('shows cURL line when curl is true', () => {
+    const entry = createMockEntry();
+    const output = formatEntry(entry, { colors: false, curl: true });
+    expect(output).toContain('curl:');
+    expect(output).toContain("curl -X GET");
+  });
+
+  it('hides cURL line when curl is false', () => {
+    const entry = createMockEntry();
+    const output = formatEntry(entry, { colors: false, curl: false });
+    expect(output).not.toContain('curl:');
+  });
+
+  it('shows cURL based on dynamic function', () => {
+    const entry = createMockEntry({
+      response: { ...createMockEntry().response, statusCode: 500 },
+    });
+    const output = formatEntry(entry, {
+      colors: false,
+      curl: (e) => e.response.statusCode >= 400,
+    });
+    expect(output).toContain('curl:');
+  });
+
+  it('omits -d flag when body was truncated', () => {
+    const entry = createMockEntry({
+      request: {
+        ...createMockEntry().request,
+        body: null,
+        bodyTruncated: true,
+      },
+    });
+    const output = formatEntry(entry, { colors: false, curl: true });
+    expect(output).toContain('# Warning: Request body was truncated');
+    expect(output).not.toContain("-d '");
   });
 });
