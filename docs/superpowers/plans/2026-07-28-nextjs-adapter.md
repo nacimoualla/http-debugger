@@ -358,65 +358,72 @@ export function withHttpDebugger(
     const res = await handler(req);
 
     timing.markHandlerEnd();
-    timing.markResponseStart();
 
     const resClone = res.clone();
-    const { body: resBodyStr, truncated: resTruncated } = await readBodyWithLimit(
-      resClone.body,
-      maxBodySize,
-    );
 
-    let resBody: unknown = null;
-    if (resBodyStr) {
-      try {
-        resBody = JSON.parse(resBodyStr);
-      } catch {
-        resBody = resBodyStr;
+    // Fire and forget: process the clone in the background
+    // This avoids blocking streaming responses (SSE, AI text streams, etc.)
+    (async () => {
+      timing.markResponseStart();
+
+      const { body: resBodyStr, truncated: resTruncated } = await readBodyWithLimit(
+        resClone.body,
+        maxBodySize,
+      );
+
+      let resBody: unknown = null;
+      if (resBodyStr) {
+        try {
+          resBody = JSON.parse(resBodyStr);
+        } catch {
+          resBody = resBodyStr;
+        }
       }
-    }
 
-    timing.markResponseEnd();
+      timing.markResponseEnd();
 
-    const entry = {
-      id,
-      timestamp: Date.now(),
-      request: {
-        method: req.method,
-        path: new URL(req.url).pathname,
-        headers: Object.fromEntries(req.headers.entries()) as Record<string, string>,
-        body: reqTruncated ? null : reqBody,
-        bodyTruncated: reqTruncated,
-        query: Object.fromEntries(new URL(req.url).searchParams),
-        params: {},
-      },
-      response: {
-        statusCode: res.status,
-        headers: Object.fromEntries(res.headers.entries()) as Record<string, string>,
-        body: resTruncated ? null : resBody,
-        bodyTruncated: resTruncated,
-        size: resBodyStr ? Buffer.byteLength(resBodyStr) : 0,
-      },
-      timing: timing.toJSON(),
-      duration: timing.duration,
-    };
+      const entry = {
+        id,
+        timestamp: Date.now(),
+        request: {
+          method: req.method,
+          path: new URL(req.url).pathname,
+          headers: Object.fromEntries(req.headers.entries()) as Record<string, string>,
+          body: reqTruncated ? null : reqBody,
+          bodyTruncated: reqTruncated,
+          query: Object.fromEntries(new URL(req.url).searchParams),
+          params: {},
+        },
+        response: {
+          statusCode: res.status,
+          headers: Object.fromEntries(res.headers.entries()) as Record<string, string>,
+          body: resTruncated ? null : resBody,
+          bodyTruncated: resTruncated,
+          size: resBodyStr ? Buffer.byteLength(resBodyStr) : 0,
+        },
+        timing: timing.toJSON(),
+        duration: timing.duration,
+      };
 
-    const dashboardOpts = getDashboardOptions();
-    const mergedOptions = { ...dashboardOpts, ...handlerOptions };
+      const dashboardOpts = getDashboardOptions();
+      const mergedOptions = { ...dashboardOpts, ...handlerOptions };
 
-    if (mergedOptions.filter && !mergedOptions.filter(entry)) return res;
+      if (mergedOptions.filter && !mergedOptions.filter(entry)) return;
 
-    console.log(
-      formatEntry(entry, {
-        colors: mergedOptions.colors,
-        sanitize: mergedOptions.sanitize,
-        maxDepth: mergedOptions.maxDepth,
-        maxArrayItems: mergedOptions.maxArrayItems,
-        curl: mergedOptions.curl,
-      }),
-    );
+      console.log(
+        formatEntry(entry, {
+          colors: mergedOptions.colors,
+          sanitize: mergedOptions.sanitize,
+          maxDepth: mergedOptions.maxDepth,
+          maxArrayItems: mergedOptions.maxArrayItems,
+          curl: mergedOptions.curl,
+        }),
+      );
 
-    engine.addEntry(entry as any);
+      engine.addEntry(entry as any);
+    })();
 
+    // Return the original response instantly so streaming works flawlessly
     return res;
   };
 }
@@ -492,7 +499,8 @@ describe('withHttpDebugger', () => {
     });
 
     await wrapped(req);
-    await new Promise((r) => setTimeout(r, 100));
+    // Response processing is non-blocking, wait for background task
+    await new Promise((r) => setTimeout(r, 200));
 
     expect(capturedOutput.some((o) => o.includes('POST /api/users'))).toBe(true);
     expect(capturedOutput.some((o) => o.includes('"name": "Alice"'))).toBe(true);
@@ -506,7 +514,7 @@ describe('withHttpDebugger', () => {
 
     const req = new Request('http://localhost/api/test');
     await wrapped(req);
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 200));
 
     expect(capturedOutput.some((o) => o.includes('"id": 1'))).toBe(true);
   });
@@ -519,7 +527,7 @@ describe('withHttpDebugger', () => {
 
     const req = new Request('http://localhost/api/no-content');
     await wrapped(req);
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 200));
 
     expect(capturedOutput.some((o) => o.includes('204'))).toBe(true);
   });
@@ -532,7 +540,7 @@ describe('withHttpDebugger', () => {
 
     const req = new Request('http://localhost/api/test');
     await wrapped(req);
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 200));
 
     expect(capturedOutput.some((o) => o.includes('Timing:'))).toBe(true);
   });
@@ -545,7 +553,7 @@ describe('withHttpDebugger', () => {
 
     const req = new Request('http://localhost/api/test');
     await wrapped(req);
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 200));
 
     let received = '';
     engine.addClientWithHistory((chunk) => { received += chunk; });
@@ -563,9 +571,25 @@ describe('withHttpDebugger', () => {
 
     const req = new Request('http://localhost/api/test');
     await wrapped(req);
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 200));
 
     expect(capturedOutput.length).toBe(0);
+  });
+
+  it('returns response instantly without blocking', async () => {
+    const handler = async (req: Request) => {
+      return Response.json({ ok: true });
+    };
+    const wrapped = withHttpDebugger(handler, { colors: false });
+
+    const req = new Request('http://localhost/api/test');
+    const start = Date.now();
+    const res = await wrapped(req);
+    const elapsed = Date.now() - start;
+
+    // Response should return immediately (under 50ms), not blocked by body capture
+    expect(elapsed).toBeLessThan(50);
+    expect(res.status).toBe(200);
   });
 });
 ```
