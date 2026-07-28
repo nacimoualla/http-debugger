@@ -37,6 +37,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Publish to JSR
+        run: npx jsr publish
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
