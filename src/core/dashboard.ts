@@ -1,6 +1,6 @@
 import type { DebugEntry } from '../types.js';
 
-export const DASHBOARD_HTML = `<!DOCTYPE html>
+export const DASHBOARD_HTML: string = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -136,7 +136,11 @@ export const DASHBOARD_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-export function createDashboardEngine(maxEntries: number = 100) {
+export function createDashboardEngine(maxEntries: number = 100): {
+  isEnabled: boolean;
+  addEntry: (entry: DebugEntry) => void;
+  addClientWithHistory: (sendFn: (chunk: string) => void) => () => void;
+} {
   const buffer: DebugEntry[] = [];
   const clients = new Set<(chunk: string) => void>();
 
