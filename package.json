@@ -120,7 +120,7 @@
     "hono": "^4.12.32",
     "prettier": "^3.9.6",
     "tsup": "^8.0.0",
-    "typedoc": "^0.26.0",
+    "typedoc": "^0.28.0",
     "typedoc-vitepress-theme": "^1.0.0",
     "typescript": "^5.5.0",
     "typescript-eslint": "^8.65.0",
