@@ -1,5 +1,10 @@
 # http-debugger
 
+[![npm version](https://img.shields.io/npm/v/http-debugger.svg)](https://www.npmjs.com/package/http-debugger)
+[![CI](https://github.com/nacimoualla/http-debugger/actions/workflows/ci.yml/badge.svg)](https://github.com/nacimoualla/http-debugger/actions/workflows/ci.yml)
+[![License](https://img.shields.io/npm/l/http-debugger.svg)](./LICENSE)
+[![Downloads](https://img.shields.io/npm/dm/http-debugger.svg)](https://www.npmjs.com/package/http-debugger)
+
 **Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge.**
 
 Stop writing `console.log(req.body)` and stop switching to Postman to replay failed requests. `http-debugger` intercepts raw HTTP streams to give you safe, readable, and actionable terminal observability.
