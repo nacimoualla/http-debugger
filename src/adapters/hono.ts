@@ -3,6 +3,7 @@ import type { MiddlewareOptions, DebugEntry } from '../types.js';
 import { createTiming } from '../core/timing.js';
 import { generateId } from '../core/capture.js';
 import { formatEntry } from '../core/formatter.js';
+import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
 
 const isTTY = (() => {
   try {
@@ -57,12 +58,42 @@ async function readBodyWithLimit(
 export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler {
   const maxBodySize = options.maxBodySize ?? 1024;
   const useColors = options.colors !== undefined ? options.colors : isTTY;
+  const engine = createDashboardEngine(
+    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+  );
 
   return async (c, next) => {
     const timing = createTiming();
     const id = generateId();
 
     timing.markHeadersReceived();
+
+    if (engine.isEnabled) {
+      if (c.req.path === '/__debugger') {
+        return c.html(DASHBOARD_HTML);
+      }
+      if (c.req.path === '/__debugger/stream') {
+        let teardown: (() => void) | undefined;
+        const stream = new ReadableStream({
+          start(controller) {
+            const sendFn = (chunk: string) => {
+              controller.enqueue(new TextEncoder().encode(chunk));
+            };
+            teardown = engine.addClientWithHistory(sendFn);
+          },
+          cancel() {
+            teardown?.();
+          },
+        });
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        });
+      }
+    }
 
     const reqClone = c.req.raw.clone();
     const { body: reqBodyStr, truncated: reqTruncated } = await readBodyWithLimit(
@@ -143,6 +174,10 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
         curl: options.curl,
       }),
     );
+
+    if (engine.isEnabled) {
+      engine.addEntry(entry);
+    }
   };
 }
 
