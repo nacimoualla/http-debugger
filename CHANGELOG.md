@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0
+- Added: Advanced filter toolbar (method, status, duration, size, date range)
+- Added: HAR export with Full (HAR 1.2) and Minimal modes
+- Added: Pause/Resume button (local drop, SSE stays connected)
+- Added: Clear button (instant buffer reset)
+- Added: Entry counter (filtered/total)
+- Added: Configurable ring buffer (`dashboard.maxEntries`, default 5000, max 50000)
+- Added: Filter parser with operators (`>500ms`, `<10KB`, `last 1h`, etc.)
+- Added: Debounced filter compilation (150ms) with pre-compiled predicates
+- Added: Minimal HAR compliant with Chrome DevTools import
+
 ## 1.3.0
 - Added: Next.js App Router adapter with HOF wrapper (`withHttpDebugger`)
 - Added: Catch-all dashboard route for Next.js (`dashboardRoute`)
