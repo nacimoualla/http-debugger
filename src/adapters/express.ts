@@ -3,15 +3,37 @@ import type { MiddlewareOptions } from '../types.js';
 import { createTiming } from '../core/timing.js';
 import { generateId, captureRequestBody, captureResponseBody } from '../core/capture.js';
 import { formatEntry } from '../core/formatter.js';
+import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
 
 export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
   const maxBodySize = options.maxBodySize ?? 1024;
+  const engine = createDashboardEngine(
+    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+  );
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const timing = createTiming();
     const id = generateId();
 
     timing.markHeadersReceived();
+
+    if (engine.isEnabled) {
+      if (req.url === '/__debugger') {
+        res.setHeader('Content-Type', 'text/html');
+        res.end(DASHBOARD_HTML);
+        return;
+      }
+      if (req.url === '/__debugger/stream') {
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        });
+        const teardown = engine.addClientWithHistory((chunk) => res.write(chunk));
+        req.on('close', teardown);
+        return;
+      }
+    }
 
     const requestChunks: Buffer[] = [];
     let requestBytesCollected = 0;
@@ -158,6 +180,10 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
           curl: options.curl,
         }),
       );
+
+      if (engine.isEnabled) {
+        engine.addEntry(entry as any);
+      }
     });
 
     next();
