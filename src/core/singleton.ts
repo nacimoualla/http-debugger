@@ -1,9 +1,9 @@
 import { createDashboardEngine, type DashboardEngine } from './dashboard.js';
-import type { MiddlewareOptions } from '../types.js';
+import type { DashboardOptions } from '../types.js';
 
 const globalForDebugger = globalThis as unknown as {
   __httpDebuggerEngine: DashboardEngine | undefined;
-  __httpDebuggerOptions: MiddlewareOptions | undefined;
+  __httpDebuggerOptions: DashboardOptions | undefined;
 };
 
 export const engine: DashboardEngine =
@@ -13,9 +13,9 @@ if (process.env.NODE_ENV !== 'production') {
   globalForDebugger.__httpDebuggerEngine = engine;
 }
 
-export function setDashboardOptions(options: MiddlewareOptions): void {
+export function setDashboardOptions(options: DashboardOptions): void {
   const globalForOptions = globalThis as unknown as {
-    __httpDebuggerOptions: MiddlewareOptions | undefined;
+    __httpDebuggerOptions: DashboardOptions | undefined;
   };
   if (process.env.NODE_ENV !== 'production') {
     globalForOptions.__httpDebuggerOptions = options;
@@ -24,9 +24,9 @@ export function setDashboardOptions(options: MiddlewareOptions): void {
   }
 }
 
-export function getDashboardOptions(): MiddlewareOptions {
+export function getDashboardOptions(): DashboardOptions {
   const globalForOptions = globalThis as unknown as {
-    __httpDebuggerOptions: MiddlewareOptions | undefined;
+    __httpDebuggerOptions: DashboardOptions | undefined;
   };
   return globalForOptions.__httpDebuggerOptions ?? {};
 }

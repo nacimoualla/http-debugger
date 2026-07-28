@@ -81,3 +81,9 @@ export interface MiddlewareOptions {
   /** Enable the web dashboard. Pass true or { maxEntries: number }. */
   dashboard?: boolean | { maxEntries?: number };
 }
+
+/** Configuration options for the Next.js dashboard route. */
+export interface DashboardOptions extends MiddlewareOptions {
+  /** Max entries in ring buffer (default: 100). */
+  maxEntries?: number;
+}
