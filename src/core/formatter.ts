@@ -66,7 +66,8 @@ function getObjectDepth(obj: unknown): number {
   return depth;
 }
 
-function formatBody(body: unknown, maxDepth: number, maxArrayItems: number): string {
+function formatBody(body: unknown, maxDepth: number, maxArrayItems: number, truncated: boolean): string {
+  if (truncated) return '[truncated]';
   if (body === null || body === undefined) return '';
   if (typeof body === 'string') return body;
   const replacer = createDepthReplacer(maxDepth, maxArrayItems);
@@ -138,7 +139,7 @@ export function formatEntry(
     }
   }
 
-  const reqBody = formatBody(request.body, maxDepth, maxArrayItems);
+  const reqBody = formatBody(request.body, maxDepth, maxArrayItems, request.bodyTruncated);
   if (reqBody) {
     lines.push(`  Body: ${reqBody}`);
   }
@@ -162,7 +163,7 @@ export function formatEntry(
     }
   }
 
-  const resBody = formatBody(response.body, maxDepth, maxArrayItems);
+  const resBody = formatBody(response.body, maxDepth, maxArrayItems, response.bodyTruncated);
   if (resBody) {
     lines.push(`  Body: ${resBody}`);
   }

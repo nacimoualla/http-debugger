@@ -155,8 +155,6 @@ describe('httpDebugger Express adapter', () => {
   });
 
   it('does not buffer large responses beyond maxBodySize', async () => {
-    app.use(httpDebugger({ colors: false, maxBodySize: 1024 }));
-
     app.get('/large', (_req: Request, res: Response) => {
       const largeData = 'x'.repeat(100 * 1024);
       res.send(largeData);

@@ -117,10 +117,8 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
 
       timing.markResponseEnd();
 
-      let responseBody = captureResponseBody(responseChunks, maxBodySize);
-      if (responseOverflow) {
-        responseBody = `[truncated, ${(totalResponseBytes / 1024).toFixed(1)}KB total]`;
-      }
+      const reqCapture = captureRequestBody(requestChunks, req.headers['content-type'] || '', maxBodySize);
+      const resCapture = captureResponseBody(responseChunks, maxBodySize);
 
       const entry = {
         id,
@@ -129,16 +127,16 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
           method: req.method,
           path: req.originalUrl || req.url,
           headers: req.headers as Record<string, string>,
-          body: captureRequestBody(requestChunks, req.headers['content-type'] || '', maxBodySize),
-          bodyTruncated: requestOverflow,
+          body: reqCapture.body,
+          bodyTruncated: requestOverflow || reqCapture.truncated,
           query: req.query as Record<string, string>,
           params: req.params as Record<string, string>,
         },
         response: {
           statusCode: res.statusCode,
           headers: res.getHeaders() as Record<string, string>,
-          body: responseBody,
-          bodyTruncated: responseOverflow,
+          body: resCapture.body,
+          bodyTruncated: responseOverflow || resCapture.truncated,
           size: parseInt(res.getHeader('content-length') as string) || totalResponseBytes,
         },
         timing: timing.toJSON(),
@@ -150,6 +148,9 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
       console.log(formatEntry(entry, {
         colors: options.colors,
         sanitize: options.sanitize,
+        maxDepth: options.maxDepth,
+        maxArrayItems: options.maxArrayItems,
+        curl: options.curl,
       }));
     });
 

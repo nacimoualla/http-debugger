@@ -1,12 +1,47 @@
 # http-debugger
 
-Lightweight HTTP debug middleware for Node.js with a clean terminal UI.
+**Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge.**
 
-Captures request and response data at the **stream level** — not at the Express API level. This means it works with every response method your app uses: `res.json()`, `res.send()`, `res.sendStatus()`, `res.write()`/`res.end()`, and streaming.
+Stop writing `console.log(req.body)` and stop switching to Postman to replay failed requests. `http-debugger` intercepts raw HTTP streams to give you safe, readable, and actionable terminal observability.
 
-**Zero runtime dependencies.** Built with TypeScript. Ships ESM + CJS.
+## The Output
 
-## Install
+```text
+→ POST /api/users
+  content-type: application/json
+  authorization: ***
+
+  Body: {
+    "name": "Alice",
+    "roles": ["admin", ... 2 more]
+  }
+
+← 500 Internal Server Error (45ms)
+  content-type: application/json
+
+  Body: { "error": "Database connection failed" }
+  Size: 45B
+
+  Timing:
+    Headers:   1ms
+    Body Read: 2ms
+    Handler:   38ms
+    Response:  4ms
+
+  curl: curl -X POST 'http://localhost:3000/api/users' \
+    -H 'content-type: application/json' \
+    -d '{"name":"Alice"}'
+```
+
+## Core Features
+
+* **Instant Replay:** Automatically generates ready-to-paste cURL commands for failed requests.
+* **No Terminal Spam:** Smart body truncation collapses deep JSON objects and massive arrays so your terminal stays readable.
+* **Zero Dependencies:** A tiny footprint that won't bloat your `node_modules`.
+* **Framework Native:** Ships with optimized adapters for Express, Fastify, and Hono.
+* **Edge Ready:** The Hono adapter relies strictly on WinterCG standard Web APIs (`performance.now()`, `ReadableStream`), making it fully compatible with Cloudflare Workers, Deno, and Bun.
+
+## Installation
 
 ```bash
 npm install http-debugger
@@ -14,74 +49,61 @@ npm install http-debugger
 
 ## Quick Start
 
+Pick your framework. Register the middleware **before** your routes.
+
+### Express
+
 ```typescript
 import express from 'express';
 import { httpDebugger } from 'http-debugger/express';
 
 const app = express();
-
 app.use(httpDebugger());
-
-app.get('/api/users', (req, res) => {
-  res.json({ users: [] });
-});
-
-app.listen(3000);
 ```
 
-Register `httpDebugger()` **before** `express.json()` and your route handlers. This lets it intercept the raw request body stream before body-parser consumes it.
+### Fastify
 
-## Output
+```typescript
+import Fastify from 'fastify';
+import { httpDebugger } from 'http-debugger/fastify';
 
-Every request logs a structured block to your terminal:
-
-```
-→ POST /api/users
-  Headers: { "content-type": "application/json", "authorization": "***" }
-  Body: {
-    "name": "Alice"
-  }
-
-← 201 Created (45ms)
-  Headers: { "content-type": "application/json" }
-  Body: {
-    "id": 1,
-    "name": "Alice"
-  }
-  Size: 67B
-
-  Timing:
-    Headers:  2ms
-    Body:     1ms
-    Handler:  38ms
-    Response: 4ms
+const fastify = Fastify();
+fastify.register(httpDebugger());
 ```
 
-Sensitive headers (`Authorization`, `Cookie`, `Set-Cookie`, `Proxy-Authorization`) are redacted by default.
+### Hono
 
-## Why Stream-Level Capture?
+```typescript
+import { Hono } from 'hono';
+import { httpDebugger } from 'http-debugger/hono';
 
-Most debug loggers monkey-patch Express methods like `res.json()`. If your code uses `res.send()`, `res.sendStatus()`, or streams, the body is never captured.
+const app = new Hono();
+app.use('*', httpDebugger());
+```
 
-http-debugger hooks into the underlying Node.js streams — `req.on('data')` and `res.write()`/`res.end()` — which **all** Express response methods use internally.
+## Configuration
 
-| Response Method | API-level logger | http-debugger |
-|-----------------|------------------|---------------|
-| `res.json(obj)` | Captures | Captures |
-| `res.send(str)` | Misses | Captures |
-| `res.sendStatus(200)` | Misses | Captures |
-| `res.write()` + `res.end()` | Misses | Captures |
-| `res.sendFile(path)` | Misses | Captures |
-| Streaming response | Misses | Captures |
-
-## Options
+Pass an options object to customize the behavior.
 
 ```typescript
 httpDebugger({
-  filter: (entry) => entry.request.path.startsWith('/api'),
+  // Show cURL command only when a request fails
+  curl: (entry) => entry.response.statusCode >= 400,
+
+  // Memory protection: max raw bytes to capture before dropping (default: 1024)
   maxBodySize: 2048,
+
+  // Visual limits: collapse JSON deeper than 4 levels
+  maxDepth: 4,
+
+  // Visual limits: show only first 10 items of an array
+  maxArrayItems: 10,
+
+  // Automatically redact Authorization and Cookie headers
   sanitize: true,
-  colors: true,
+
+  // Filter out noise (e.g., ignore health checks)
+  filter: (entry) => !entry.request.path.includes('/health')
 });
 ```
 
@@ -89,7 +111,10 @@ httpDebugger({
 |--------|------|---------|-------------|
 | `filter` | `(entry: DebugEntry) => boolean` | — | Only log entries that pass this check |
 | `maxBodySize` | `number` | `1024` | Max bytes to capture per body. Larger bodies are truncated. |
-| `sanitize` | `boolean` | `true` | Redact sensitive headers |
+| `maxDepth` | `number` | `4` | Max nesting depth before collapsing JSON objects. |
+| `maxArrayItems` | `number` | `10` | Max array items to show before truncating. |
+| `curl` | `boolean \| ((entry: DebugEntry) => boolean)` | `false` | Show cURL command. Pass a function for conditional output. |
+| `sanitize` | `boolean` | `true` | Redact sensitive headers (`Authorization`, `Cookie`, etc.) |
 | `colors` | `boolean` | auto | Enable/disable ANSI color output. Auto-detects TTY. |
 
 ## How It Works
@@ -99,6 +124,24 @@ httpDebugger({
 3. A safety valve stops collecting once `maxBodySize` is reached — the stream continues flowing unmodified, so large responses (files, video, downloads) never cause memory issues.
 4. On response `finish`, it builds a `DebugEntry` with request, response, and timing data, then formats and logs it.
 
+## Exports
+
+```typescript
+// Core
+export { createTiming } from 'http-debugger';
+export { generateId, captureRequestBody, captureResponseBody } from 'http-debugger';
+export { formatEntry } from 'http-debugger';
+export { sanitizeHeaders } from 'http-debugger';
+export type { DebugEntry, TimingInfo, MiddlewareOptions, CaptureResult } from 'http-debugger';
+
+// Adapters
+import { httpDebugger } from 'http-debugger/express';
+import { httpDebugger } from 'http-debugger/fastify';
+import { httpDebugger } from 'http-debugger/hono';
+```
+
 ## License
 
-MIT — for personal and internal use only. No distribution, sublicensing, or selling permitted.
+**MIT License with No-Resale Clause**
+
+This project is completely free to use internally to build, develop, test, and maintain commercial or personal products. However, you may **not** sell, lease, or sublicense this software itself (or a modified version of it) as a standalone commercial product. See the [LICENSE](./LICENSE) file for full details.
