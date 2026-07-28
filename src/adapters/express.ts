@@ -124,11 +124,13 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
 
       const entry = {
         id,
+        timestamp: Date.now(),
         request: {
           method: req.method,
           path: req.originalUrl || req.url,
           headers: req.headers as Record<string, string>,
           body: captureRequestBody(requestChunks, req.headers['content-type'] || '', maxBodySize),
+          bodyTruncated: requestOverflow,
           query: req.query as Record<string, string>,
           params: req.params as Record<string, string>,
         },
@@ -136,6 +138,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
           statusCode: res.statusCode,
           headers: res.getHeaders() as Record<string, string>,
           body: responseBody,
+          bodyTruncated: responseOverflow,
           size: parseInt(res.getHeader('content-length') as string) || totalResponseBytes,
         },
         timing: timing.toJSON(),

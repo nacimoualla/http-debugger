@@ -1,5 +1,4 @@
 export interface TimingInfo {
-  start: number;
   headersReceived: number;
   bodyComplete: number;
   handlerStart: number;
@@ -13,6 +12,7 @@ export interface RequestCapture {
   path: string;
   headers: Record<string, string>;
   body: unknown;
+  bodyTruncated: boolean;
   query: Record<string, string>;
   params: Record<string, string>;
 }
@@ -21,11 +21,13 @@ export interface ResponseCapture {
   statusCode: number;
   headers: Record<string, string>;
   body: unknown;
+  bodyTruncated: boolean;
   size: number;
 }
 
 export interface DebugEntry {
   id: string;
+  timestamp: number;
   request: RequestCapture;
   response: ResponseCapture;
   timing: TimingInfo;
@@ -35,6 +37,9 @@ export interface DebugEntry {
 export interface MiddlewareOptions {
   filter?: (entry: DebugEntry) => boolean;
   maxBodySize?: number;
+  maxDepth?: number;
+  maxArrayItems?: number;
   sanitize?: boolean;
   colors?: boolean;
+  curl?: boolean | ((entry: DebugEntry) => boolean);
 }

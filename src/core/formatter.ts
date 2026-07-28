@@ -108,7 +108,7 @@ export function formatEntry(
   lines.push('');
 
   lines.push('  Timing:');
-  lines.push(`    Headers:   ${formatTimingValue(timing.headersReceived, timing.start)}`);
+  lines.push(`    Headers:   ${formatTimingValue(timing.headersReceived, 0)}`);
   lines.push(`    Body Read: ${formatTimingValue(timing.bodyComplete, timing.headersReceived)}`);
   lines.push(`    Handler:   ${formatTimingValue(timing.handlerEnd, timing.handlerStart)}`);
   lines.push(`    Response:  ${formatTimingValue(timing.responseEnd, timing.responseStart)}`);
