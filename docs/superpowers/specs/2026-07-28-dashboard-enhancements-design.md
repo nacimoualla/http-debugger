@@ -237,7 +237,9 @@ interface DashboardEngine {
 | Free text operators | Powerful, single input, familiar to devs |
 | Relative date presets | Covers 90% of debugging sessions |
 | Local drop on pause | Instant resume, no SSE churn |
-| Buffer max 100 | Memory safe, sufficient for debugging |
+| Buffer max 5000 | Memory safe, configurable, sufficient for long sessions |
+| HAR minimal compliance | Chrome DevTools import works without stubbing |
+| Debounced filter compilation | O(1) per SSE event, no UI lag on fast streams |
 
 ---
 
