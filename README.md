@@ -109,6 +109,24 @@ import { dashboardRoute } from 'http-debugger/next';
 export const GET = dashboardRoute({ maxDepth: 4, sanitize: true });
 ```
 
+## Embedded Dashboard
+
+http-debugger includes a real-time web dashboard accessible at `/__debugger` when enabled.
+
+```typescript
+app.use(httpDebugger({ dashboard: true }));
+```
+
+**Features:**
+- **Live stream** — Real-time updates via SSE, no refresh needed
+- **Filters** — Method, status, duration (`>500ms`), size (`<10KB`), date range
+- **Pause/Resume** — Freeze the list without disconnecting SSE
+- **HAR Export** — Full (Chrome DevTools compatible) or Minimal
+- **Clear** — Instant buffer reset
+- **Auto-disabled in production** (`NODE_ENV=production`)
+
+Visit `http://localhost:3000/__debugger` to access the dashboard.
+
 ## Configuration
 
 Pass an options object to customize the behavior.
