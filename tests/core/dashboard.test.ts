@@ -1,6 +1,47 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createDashboardEngine } from '../../src/core/dashboard.js';
+import { createDashboardEngine, DASHBOARD_HTML } from '../../src/core/dashboard.js';
 import type { DebugEntry } from '../../src/types.js';
+
+describe('DASHBOARD_HTML', () => {
+  it('contains filter toolbar elements', () => {
+    expect(DASHBOARD_HTML).toContain('id="filter-method"');
+    expect(DASHBOARD_HTML).toContain('id="filter-status"');
+    expect(DASHBOARD_HTML).toContain('id="filter-duration"');
+    expect(DASHBOARD_HTML).toContain('id="filter-size"');
+    expect(DASHBOARD_HTML).toContain('id="filter-date-range"');
+    expect(DASHBOARD_HTML).toContain('id="btn-clear"');
+    expect(DASHBOARD_HTML).toContain('id="btn-har-export"');
+    expect(DASHBOARD_HTML).toContain('id="btn-pause"');
+  });
+
+  it('contains HAR export dropdown options', () => {
+    expect(DASHBOARD_HTML).toContain('Full HAR');
+    expect(DASHBOARD_HTML).toContain('Minimal HAR');
+  });
+
+  it('contains filter toolbar styles', () => {
+    expect(DASHBOARD_HTML).toContain('.toolbar');
+    expect(DASHBOARD_HTML).toContain('.filter-row');
+    expect(DASHBOARD_HTML).toContain('.action-row');
+    expect(DASHBOARD_HTML).toContain('.dropdown');
+    expect(DASHBOARD_HTML).toContain('.dropdown-menu');
+  });
+
+  it('contains filter logic and HAR generation in script', () => {
+    expect(DASHBOARD_HTML).toContain('parseFilters');
+    expect(DASHBOARD_HTML).toContain('applyFilters');
+    expect(DASHBOARD_HTML).toContain('generateHAR');
+    expect(DASHBOARD_HTML).toContain('compileFilters');
+    expect(DASHBOARD_HTML).toContain('debounce');
+    expect(DASHBOARD_HTML).toContain('filteredEntries');
+    expect(DASHBOARD_HTML).toContain('paused');
+    expect(DASHBOARD_HTML).toContain('btn-pause');
+    expect(DASHBOARD_HTML).toContain('btn-clear');
+    expect(DASHBOARD_HTML).toContain('btn-har-export');
+    expect(DASHBOARD_HTML).toContain('data-har-type');
+    expect(DASHBOARD_HTML).toContain('entry-counter');
+  });
+});
 
 function createEntry(overrides: Partial<DebugEntry> = {}): DebugEntry {
   return {
