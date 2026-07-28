@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.1
+- Fixed: Added explicit types for JSR slow type compliance
+
 ## 1.2.0
 - Added: Embedded web dashboard with real-time SSE updates
 - Added: Factory-isolated `createDashboardEngine()` for multi-instance safety
