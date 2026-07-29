@@ -12,7 +12,8 @@
 <p><a href="https://www.npmjs.com/package/http-debugger"><img src="https://img.shields.io/npm/v/http-debugger.svg" alt="npm version"></a>
 <a href="https://github.com/nacimoualla/http-debugger/actions/workflows/ci.yml"><img src="https://github.com/nacimoualla/http-debugger/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="./LICENSE"><img src="https://img.shields.io/npm/l/http-debugger.svg" alt="License"></a>
-<a href="https://www.npmjs.com/package/http-debugger"><img src="https://img.shields.io/npm/dm/http-debugger.svg" alt="Downloads"></a></p>
+<a href="https://www.npmjs.com/package/http-debugger"><img src="https://img.shields.io/npm/dm/http-debugger.svg" alt="Downloads"></a>
+<a href="https://nacimoualla.github.io/http-debugger/"><img src="https://img.shields.io/badge/docs-live-brightgreen" alt="Docs"></a></p>
 <p><strong>Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge.</strong></p>
 <p>Stop writing <code>console.log(req.body)</code> and stop switching to Postman to replay failed requests. <code>http-debugger</code> intercepts raw HTTP streams to give you safe, readable, and actionable terminal observability.</p>
 <h2 id="the-output" class="tsd-anchor-link">The Output<a href="#the-output" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
@@ -76,6 +77,22 @@
 <pre><code class="typescript"><span class="hl-7">// app/__debugger/[[...route]]/route.ts</span><br/><span class="hl-3">import</span><span class="hl-1"> { </span><span class="hl-4">dashboardRoute</span><span class="hl-1"> } </span><span class="hl-3">from</span><span class="hl-1"> </span><span class="hl-2">&#39;http-debugger/next&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-3">export</span><span class="hl-1"> </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">GET</span><span class="hl-1"> = </span><span class="hl-0">dashboardRoute</span><span class="hl-1">({ </span><span class="hl-4">maxDepth:</span><span class="hl-1"> </span><span class="hl-9">4</span><span class="hl-1">, </span><span class="hl-4">sanitize:</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1"> });</span>
 </code><button type="button">Copy</button></pre>
 
+<h2 id="embedded-dashboard" class="tsd-anchor-link">Embedded Dashboard<a href="#embedded-dashboard" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>http-debugger includes a real-time web dashboard accessible at <code>/__debugger</code> when enabled.</p>
+<pre><code class="typescript"><span class="hl-4">app</span><span class="hl-1">.</span><span class="hl-0">use</span><span class="hl-1">(</span><span class="hl-0">httpDebugger</span><span class="hl-1">({ </span><span class="hl-4">dashboard:</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1"> }));</span>
+</code><button type="button">Copy</button></pre>
+
+<p><strong>Features:</strong></p>
+<ul>
+<li><strong>Live stream</strong> — Real-time updates via SSE, no refresh needed</li>
+<li><strong>Filters</strong> — Method, status, duration (<code>&gt;500ms</code>), size (<code>&lt;10KB</code>), date range</li>
+<li><strong>Pause/Resume</strong> — Freeze the list without disconnecting SSE</li>
+<li><strong>Replay</strong> — Re-send any request with one click, see the new response inline</li>
+<li><strong>HAR Export</strong> — Full (Chrome DevTools compatible) or Minimal</li>
+<li><strong>Clear</strong> — Instant buffer reset</li>
+<li><strong>Auto-disabled in production</strong> (<code>NODE_ENV=production</code>)</li>
+</ul>
+<p>Visit <code>http://localhost:3000/__debugger</code> to access the dashboard.</p>
 <h2 id="configuration" class="tsd-anchor-link">Configuration<a href="#configuration" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>Pass an options object to customize the behavior.</p>
 <pre><code class="typescript"><span class="hl-0">httpDebugger</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-7">// Show cURL command only when a request fails</span><br/><span class="hl-1">  </span><span class="hl-0">curl</span><span class="hl-4">:</span><span class="hl-1"> (</span><span class="hl-4">entry</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> </span><span class="hl-4">entry</span><span class="hl-1">.</span><span class="hl-4">response</span><span class="hl-1">.</span><span class="hl-4">statusCode</span><span class="hl-1"> &gt;= </span><span class="hl-9">400</span><span class="hl-1">,</span><br/><br/><span class="hl-1">  </span><span class="hl-7">// Memory protection: max raw bytes to capture before dropping (default: 1024)</span><br/><span class="hl-1">  </span><span class="hl-4">maxBodySize:</span><span class="hl-1"> </span><span class="hl-9">2048</span><span class="hl-1">,</span><br/><br/><span class="hl-1">  </span><span class="hl-7">// Visual limits: collapse JSON deeper than 4 levels</span><br/><span class="hl-1">  </span><span class="hl-4">maxDepth:</span><span class="hl-1"> </span><span class="hl-9">4</span><span class="hl-1">,</span><br/><br/><span class="hl-1">  </span><span class="hl-7">// Visual limits: show only first 10 items of an array</span><br/><span class="hl-1">  </span><span class="hl-4">maxArrayItems:</span><span class="hl-1"> </span><span class="hl-9">10</span><span class="hl-1">,</span><br/><br/><span class="hl-1">  </span><span class="hl-7">// Automatically redact Authorization and Cookie headers</span><br/><span class="hl-1">  </span><span class="hl-4">sanitize:</span><span class="hl-1"> </span><span class="hl-5">true</span><span class="hl-1">,</span><br/><br/><span class="hl-1">  </span><span class="hl-7">// Filter out noise (e.g., ignore health checks)</span><br/><span class="hl-1">  </span><span class="hl-0">filter</span><span class="hl-4">:</span><span class="hl-1"> (</span><span class="hl-4">entry</span><span class="hl-1">) </span><span class="hl-5">=&gt;</span><span class="hl-1"> !</span><span class="hl-4">entry</span><span class="hl-1">.</span><span class="hl-4">request</span><span class="hl-1">.</span><span class="hl-4">path</span><span class="hl-1">.</span><span class="hl-0">includes</span><span class="hl-1">(</span><span class="hl-2">&#39;/health&#39;</span><span class="hl-1">)</span><br/><span class="hl-1">});</span>
@@ -263,6 +280,7 @@
 <li><a href="#fastify"><span>Fastify</span></a></li>
 <li><a href="#hono"><span>Hono</span></a></li>
 <li><a href="#nextjs-app-router"><span>Next.js (<wbr/>App <wbr/>Router)</span></a></li></ul></li>
+<li><a href="#embedded-dashboard"><span>Embedded <wbr/>Dashboard</span></a></li>
 <li><a href="#configuration"><span>Configuration</span></a></li>
 <li><a href="#how-it-works"><span>How <wbr/>It <wbr/>Works</span></a></li>
 <li><a href="#why-not-morgan-pino"><span>Why not <wbr/>Morgan / <wbr/>Pino?</span></a></li>

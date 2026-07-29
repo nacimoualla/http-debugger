@@ -23,7 +23,7 @@ export default defineConfig({
       { text: 'Cookbook', link: '/guides/cookbook/ai-streaming', activeMatch: '/guides/cookbook/' },
       { text: 'Architecture', link: '/guides/architecture/adrs', activeMatch: '/guides/architecture/' },
       {
-        text: 'v1.3.0',
+        text: 'v1.6.0',
         items: [
           { text: 'Changelog', link: 'https://github.com/nacimoualla/http-debugger/blob/main/CHANGELOG.md' },
           { text: 'Contributing', link: '/guides/architecture/contributing' }
@@ -95,7 +95,5 @@ export default defineConfig({
         external: ['/superpowers/']
       }
     }
-  },
-
-  ignoreDeadLinks: ['../guides/architecture/adrs.md']
+  }
 })

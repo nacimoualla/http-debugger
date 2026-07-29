@@ -193,7 +193,7 @@ httpDebugger({
 
 ## Contributing
 
-Contributions welcome! See the [contributing guide](docs/contributing.md) for setup, code style, and how to add a new adapter.
+Contributions welcome! See the [contributing guide](docs/guides/architecture/contributing.md) for setup, code style, and how to add a new adapter.
 
 Quick start:
 
