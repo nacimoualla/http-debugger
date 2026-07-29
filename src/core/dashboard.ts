@@ -66,6 +66,14 @@ export const DASHBOARD_HTML: string = `<!DOCTYPE html>
     .timing .item { background: #161b22; padding: 8px; border-radius: 6px; text-align: center; }
     .timing .item .label { font-size: 11px; color: #8b949e; }
     .timing .item .value { font-size: 14px; font-weight: 600; }
+    .replay-loading { color: #58a6ff; padding: 16px; text-align: center; }
+    .replay-error { color: #f85149; padding: 16px; background: #f8514911; border: 1px solid #f8514933; border-radius: 6px; }
+    .replay-success { padding: 16px; }
+    .replay-success h4 { margin-bottom: 8px; color: #3fb950; }
+    .replay-success h5 { margin: 16px 0 8px; color: #8b949e; }
+    .replay-meta { color: #8b949e; margin-bottom: 12px; font-size: 13px; }
+    .replay-success pre { background: #161b22; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; line-height: 1.5; color: #c9d1d9; }
+    .replay-success h5 { margin-top: 16px; }
   </style>
 </head>
 <body>
@@ -449,13 +457,111 @@ export const DASHBOARD_HTML: string = `<!DOCTYPE html>
         + '<div class="item"><div class="label">Body Read</div><div class="value">' + (e.timing.bodyComplete - e.timing.headersReceived).toFixed(1) + 'ms</div></div>'
         + '<div class="item"><div class="label">Handler</div><div class="value">' + (e.timing.handlerEnd - e.timing.handlerStart).toFixed(1) + 'ms</div></div>'
         + '<div class="item"><div class="label">Response</div><div class="value">' + (e.timing.responseEnd - e.timing.responseStart).toFixed(1) + 'ms</div></div>'
-        + '</div></div>';
+        + '</div></div>'
+        + '<div class="section"><h3>Replay</h3><div id="replay-result"></div>'
+        + '<button id="btn-replay" class="replay-btn">Replay Request</button>'
+        + '</div>';
       renderList();
     }
 
     search.oninput = () => {
       renderList();
     };
+
+    // ===== Request Replay =====
+    function replayRequest(entry) {
+      const resultDiv = document.getElementById('replay-result');
+      const btn = document.getElementById('btn-replay');
+      
+      if (!resultDiv || !btn) return;
+      
+      btn.disabled = true;
+      btn.textContent = 'Replaying...';
+      resultDiv.innerHTML = '<div class="replay-loading">Replaying request...</div>';
+      
+      const { method, path, headers, body } = entry.request;
+      const baseUrl = window.location.origin;
+      const url = baseUrl + entry.request.path;
+      
+      // Prepare headers (remove browser-controlled headers)
+      const headers = {};
+      for (const [key, value] of Object.entries(entry.request.headers || {})) {
+        const lowerKey = key.toLowerCase();
+        if (!['host', 'connection', 'content-length', 'transfer-encoding'].includes(lowerKey)) {
+          headers[key] = value;
+        }
+      }
+      
+      const fetchOptions = {
+        method: entry.request.method,
+        headers: headers,
+      };
+      
+      if (entry.request.body && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(entry.request.method.toUpperCase())) {
+        fetchOptions.body = typeof entry.request.body === 'string' 
+          ? entry.request.body 
+          : JSON.stringify(entry.request.body);
+      }
+      
+      fetch(url, fetchOptions)
+        .then(async (res) => {
+          const responseText = await res.text();
+          let responseBody = responseText;
+          let responseHeaders = {};
+          
+          try {
+            responseBody = JSON.parse(responseText);
+          } catch {
+            // Not JSON, keep as text
+          }
+          
+          for (const [key, value] of res.headers.entries()) {
+            responseHeaders[key] = value;
+          }
+          
+          const replayResult = {
+            status: res.status,
+            statusText: res.statusText,
+            headers: responseHeaders,
+            body: responseBody,
+            duration: performance.now() - startTime,
+          };
+          
+          renderReplayResult(replayResult);
+        })
+        .catch((err) => {
+          renderReplayResult({ error: err.message });
+        });
+      
+      const startTime = performance.now();
+      
+      function renderReplayResult(result) {
+        if (!resultDiv) return;
+        
+        if (result.error) {
+          resultDiv.innerHTML = '<div class="replay-error">Error: ' + result.error + '</div>';
+        } else {
+          resultDiv.innerHTML = '<div class="replay-success">'
+            + '<h4>Replay Response</h4>'
+            + '<div class="replay-meta">Status: ' + result.status + ' ' + result.statusText + ' (' + result.duration.toFixed(1) + 'ms)</div>'
+            + '<h5>Headers</h5><pre>' + JSON.stringify(result.headers, null, 2) + '</pre>'
+            + '<h5>Body</h5><pre>' + (typeof result.body === 'string' ? result.body : JSON.stringify(result.body, null, 2)) + '</pre>'
+            + '</div>';
+        }
+        btn.disabled = false;
+        btn.textContent = 'Replay Request';
+      }
+    }
+    
+    // Attach replay button listener (delegated)
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'btn-replay') {
+        if (selectedId) {
+          const entry = entries.find(x => x.id === selectedId);
+          if (entry) replayRequest(entry);
+        }
+      }
+    );
 
     // ===== SSE connection =====
     function connect() {
