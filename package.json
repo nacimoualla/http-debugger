@@ -1,6 +1,6 @@
 {
   "name": "http-debugger",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge. Stream-level request capture, smart body truncation, cURL generation, and framework adapters for Express, Fastify, Hono, and Next.js.",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {

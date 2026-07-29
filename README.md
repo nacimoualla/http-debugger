@@ -121,6 +121,7 @@ app.use(httpDebugger({ dashboard: true }));
 - **Live stream** — Real-time updates via SSE, no refresh needed
 - **Filters** — Method, status, duration (`>500ms`), size (`<10KB`), date range
 - **Pause/Resume** — Freeze the list without disconnecting SSE
+- **Replay** — Re-send any request with one click, see the new response inline
 - **HAR Export** — Full (Chrome DevTools compatible) or Minimal
 - **Clear** — Instant buffer reset
 - **Auto-disabled in production** (`NODE_ENV=production`)

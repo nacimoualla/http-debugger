@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+- Added: Request replay button in dashboard detail panel
+- Added: Replay requests with exact headers, body, and method
+- Added: Response display in detail panel with syntax highlighting
+- Added: Loading state and error handling for replay
+- Added: Replay button with loading state and disabled state during replay
+
 ## 1.5.0
 - Added: 50+ npm keywords for discoverability (Express/Fastify/Hono/Next.js middleware, API debugging, HTTP inspection, debugging tools)
 - Fixed: TypeScript strict mode type error in `parseSize` function
