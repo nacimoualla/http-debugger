@@ -89,11 +89,6 @@ export default defineConfig({
   vite: {
     optimizeDeps: {
       exclude: ['@nacimoualla/http-debugger']
-    },
-    build: {
-      rollupOptions: {
-        external: ['/superpowers/']
-      }
     }
   }
 })
