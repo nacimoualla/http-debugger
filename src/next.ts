@@ -1,4 +1,4 @@
-import type { MiddlewareOptions, DashboardOptions, DebugEntry } from './types.js';
+import type { MiddlewareOptions, DashboardOptions, DebugEntry, DashboardAuthFn } from './types.js';
 import { engine, setDashboardOptions, getDashboardOptions } from './core/singleton.js';
 import { readBodyWithLimit } from './core/stream.js';
 import { createTiming } from './core/timing.js';
@@ -12,10 +12,21 @@ export function dashboardRoute(
   if (options) {
     setDashboardOptions(options);
   }
+  const dashboardAuth: DashboardAuthFn | undefined = options?.dashboard
+    && typeof options.dashboard === 'object'
+    ? options.dashboard.auth
+    : undefined;
 
   return async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const path = url.pathname;
+
+    if (dashboardAuth) {
+      const allowed = await dashboardAuth(req);
+      if (!allowed) {
+        return new Response('Forbidden', { status: 403 });
+      }
+    }
 
     if (path.endsWith('/stream')) {
       let teardown: (() => void) | undefined;

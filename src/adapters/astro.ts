@@ -1,9 +1,10 @@
-import type { MiddlewareHandler } from 'hono';
+import type { APIContext, MiddlewareNext } from 'astro';
 import type { MiddlewareOptions, DebugEntry, DashboardAuthFn } from '../types.js';
 import { createTiming } from '../core/timing.js';
 import { generateId } from '../core/capture.js';
 import { formatEntry } from '../core/formatter.js';
 import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
+import { readBodyWithLimit } from '../core/stream.js';
 
 const isTTY = (() => {
   try {
@@ -15,47 +16,7 @@ const isTTY = (() => {
   }
 })();
 
-async function readBodyWithLimit(
-  stream: ReadableStream | null,
-  maxBodySize: number,
-): Promise<{ body: string; truncated: boolean }> {
-  if (!stream) return { body: '', truncated: false };
-
-  const reader = stream.getReader();
-  const chunks: Uint8Array[] = [];
-  let totalBytes = 0;
-  let truncated = false;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    totalBytes += value.length;
-    if (totalBytes <= maxBodySize) {
-      chunks.push(value);
-    } else {
-      const remaining = maxBodySize - chunks.reduce((acc, c) => acc + c.length, 0);
-      if (remaining > 0) {
-        chunks.push(value.subarray(0, remaining));
-      }
-      truncated = true;
-      reader.cancel();
-      break;
-    }
-  }
-
-  const totalLen = chunks.reduce((acc, c) => acc + c.length, 0);
-  const combined = new Uint8Array(totalLen);
-  let offset = 0;
-  for (const chunk of chunks) {
-    combined.set(chunk, offset);
-    offset += chunk.length;
-  }
-  const decoder = new TextDecoder();
-  return { body: decoder.decode(combined), truncated };
-}
-
-export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler {
+export function httpDebugger(options: MiddlewareOptions = {}) {
   const maxBodySize = options.maxBodySize ?? 1024;
   const useColors = options.colors !== undefined ? options.colors : isTTY;
   const engine = createDashboardEngine(
@@ -64,25 +25,27 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
   const dashboardAuth: DashboardAuthFn | undefined =
     typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
 
-  return async (c, next) => {
+  return async (context: APIContext, next: MiddlewareNext): Promise<Response> => {
     const timing = createTiming();
     const id = generateId();
 
     timing.markHeadersReceived();
 
     if (engine.isEnabled) {
-      const path = c.req.path;
-      if (path === '/__debugger' || path === '/__debugger/stream') {
+      const pathname = context.url.pathname;
+      if (pathname === '/__debugger' || pathname === '/__debugger/stream') {
         if (dashboardAuth) {
-          const allowed = await dashboardAuth(c.req.raw);
+          const allowed = await dashboardAuth(context.request);
           if (!allowed) {
-            return c.text('Forbidden', 403);
+            return new Response('Forbidden', { status: 403 });
           }
         }
-        if (path === '/__debugger') {
-          return c.html(DASHBOARD_HTML);
+        if (pathname === '/__debugger') {
+          return new Response(DASHBOARD_HTML, {
+            headers: { 'Content-Type': 'text/html' },
+          });
         }
-        if (path === '/__debugger/stream') {
+        if (pathname === '/__debugger/stream') {
           let teardown: (() => void) | undefined;
           const stream = new ReadableStream({
             start(controller) {
@@ -106,7 +69,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
       }
     }
 
-    const reqClone = c.req.raw.clone();
+    const reqClone = context.request.clone();
     const { body: reqBodyStr, truncated: reqTruncated } = await readBodyWithLimit(
       reqClone.body,
       maxBodySize,
@@ -114,7 +77,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
 
     let reqBody: unknown = null;
     if (reqBodyStr) {
-      const contentType = c.req.header('content-type') || '';
+      const contentType = context.request.headers.get('content-type') || '';
       if (contentType.includes('application/json')) {
         try {
           reqBody = JSON.parse(reqBodyStr);
@@ -129,12 +92,12 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
     timing.markBodyComplete();
     timing.markHandlerStart();
 
-    await next();
+    const response = await next();
 
     timing.markHandlerEnd();
     timing.markResponseStart();
 
-    const resClone = c.res.clone();
+    const resClone = response.clone();
     const { body: resBodyStr, truncated: resTruncated } = await readBodyWithLimit(
       resClone.body,
       maxBodySize,
@@ -155,17 +118,17 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
       id,
       timestamp: Date.now(),
       request: {
-        method: c.req.method,
-        path: c.req.path,
-        headers: Object.fromEntries(c.req.raw.headers.entries()) as Record<string, string>,
+        method: context.request.method,
+        path: context.url.pathname,
+        headers: Object.fromEntries(context.request.headers.entries()) as Record<string, string>,
         body: reqTruncated ? null : reqBody,
         bodyTruncated: reqTruncated,
-        query: Object.fromEntries(new URL(c.req.url).searchParams),
-        params: {},
+        query: Object.fromEntries(context.url.searchParams),
+        params: context.params as Record<string, string>,
       },
       response: {
-        statusCode: c.res.status,
-        headers: Object.fromEntries(c.res.headers.entries()) as Record<string, string>,
+        statusCode: response.status,
+        headers: Object.fromEntries(response.headers.entries()) as Record<string, string>,
         body: resTruncated ? null : resBody,
         bodyTruncated: resTruncated,
         size: resBodyStr ? Buffer.byteLength(resBodyStr) : 0,
@@ -174,7 +137,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
       duration: timing.duration,
     };
 
-    if (options.filter && !options.filter(entry)) return;
+    if (options.filter && !options.filter(entry)) return response;
 
     console.log(
       formatEntry(entry, {
@@ -189,6 +152,8 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
     if (engine.isEnabled) {
       engine.addEntry(entry);
     }
+
+    return response;
   };
 }
 

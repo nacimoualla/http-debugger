@@ -3,6 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [
     'src/index.ts',
+    'src/adapters/astro.ts',
     'src/adapters/express.ts',
     'src/adapters/fastify.ts',
     'src/adapters/hono.ts',

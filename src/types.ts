@@ -78,9 +78,16 @@ export interface MiddlewareOptions {
   colors?: boolean;
   /** Show cURL command. Pass true for always, or a function for conditional output. */
   curl?: boolean | ((entry: DebugEntry) => boolean);
-  /** Enable the web dashboard. Pass true or { maxEntries: number }. */
-  dashboard?: boolean | { maxEntries?: number };
+  /** Enable the web dashboard. Pass true or { maxEntries: number, auth?: DashboardAuthFn }. */
+  dashboard?: boolean | { maxEntries?: number; auth?: DashboardAuthFn };
 }
+
+/**
+ * Authentication callback for dashboard routes.
+ * Return true to allow access, false/undefined to deny.
+ * Receives a standard Web API Request object (available in all adapters).
+ */
+export type DashboardAuthFn = (request: Request) => boolean | Promise<boolean>;
 
 /** Configuration options for the Next.js dashboard route. */
 export interface DashboardOptions extends MiddlewareOptions {
