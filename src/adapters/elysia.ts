@@ -8,7 +8,7 @@ import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard';
 import { DashboardAuthFn } from '../types';
 import { isTTY } from './hono';
 
-export function httpDebugger(options: MiddlewareOptions = {}) {
+export function httpDebugger(options: MiddlewareOptions = {}): Elysia {
   const maxBodySize = options.maxBodySize ?? 1024;
   const engine = createDashboardEngine(
     typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined,
