@@ -1,4 +1,4 @@
-import type { MiddlewareOptions, DashboardOptions, DebugEntry } from './types.js';
+import type { MiddlewareOptions, DashboardOptions, DebugEntry, DashboardAuthFn } from './types.js';
 import { engine, setDashboardOptions, getDashboardOptions } from './core/singleton.js';
 import { readBodyWithLimit } from './core/stream.js';
 import { createTiming } from './core/timing.js';
@@ -6,16 +6,25 @@ import { generateId } from './core/capture.js';
 import { formatEntry } from './core/formatter.js';
 import { DASHBOARD_HTML } from './core/dashboard.js';
 
-export function dashboardRoute(
-  options?: DashboardOptions,
-): (req: Request) => Promise<Response> {
+export function dashboardRoute(options?: DashboardOptions): (req: Request) => Promise<Response> {
   if (options) {
     setDashboardOptions(options);
   }
+  const dashboardAuth: DashboardAuthFn | undefined =
+    options?.dashboard && typeof options.dashboard === 'object'
+      ? options.dashboard.auth
+      : undefined;
 
   return async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const path = url.pathname;
+
+    if (dashboardAuth) {
+      const allowed = await dashboardAuth(req);
+      if (!allowed) {
+        return new Response('Forbidden', { status: 403 });
+      }
+    }
 
     if (path.endsWith('/stream')) {
       let teardown: (() => void) | undefined;
@@ -34,7 +43,7 @@ export function dashboardRoute(
         headers: {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
+          Connection: 'keep-alive',
         },
       });
     }

@@ -12,14 +12,11 @@ export type {
 } from './types.js';
 
 export { createTiming } from './core/timing.js';
-export {
-  generateId,
-  captureRequestBody,
-  captureResponseBody,
-} from './core/capture.js';
+export { generateId, captureRequestBody, captureResponseBody } from './core/capture.js';
 export type { CaptureResult } from './core/capture.js';
 export { formatEntry } from './core/formatter.js';
 export { sanitizeHeaders } from './core/sanitize.js';
 export { createDashboardEngine, DASHBOARD_HTML } from './core/dashboard.js';
 export { withHttpDebugger, dashboardRoute } from './next.js';
 export type { DashboardOptions } from './types.js';
+export { httpDebugger as elysia } from './adapters/elysia.js';

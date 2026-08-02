@@ -6,9 +6,24 @@ function entry(overrides: Partial<DebugEntry> = {}): DebugEntry {
   return {
     id: '1',
     timestamp: Date.now(),
-    request: { method: 'GET', path: '/api/users', headers: {}, body: null, bodyTruncated: false, query: {}, params: {} },
+    request: {
+      method: 'GET',
+      path: '/api/users',
+      headers: {},
+      body: null,
+      bodyTruncated: false,
+      query: {},
+      params: {},
+    },
     response: { statusCode: 200, headers: {}, body: null, bodyTruncated: false, size: 100 },
-    timing: { headersReceived: 1, bodyComplete: 2, handlerStart: 3, handlerEnd: 10, responseStart: 11, responseEnd: 15 },
+    timing: {
+      headersReceived: 1,
+      bodyComplete: 2,
+      handlerStart: 3,
+      handlerEnd: 10,
+      responseStart: 11,
+      responseEnd: 15,
+    },
     duration: 15,
     ...overrides,
   };
@@ -68,13 +83,19 @@ describe('applyFilters', () => {
 
   it('ANDs all predicates', () => {
     const e = entry({ request: { method: 'POST' }, duration: 600 });
-    const preds = [ (e: DebugEntry) => e.request.method === 'POST', (e: DebugEntry) => e.duration > 500 ];
+    const preds = [
+      (e: DebugEntry) => e.request.method === 'POST',
+      (e: DebugEntry) => e.duration > 500,
+    ];
     expect(applyFilters(e, preds)).toBe(true);
   });
 
   it('returns false if any predicate fails', () => {
     const e = entry({ request: { method: 'GET' }, duration: 600 });
-    const preds = [ (e: DebugEntry) => e.request.method === 'POST', (e: DebugEntry) => e.duration > 500 ];
+    const preds = [
+      (e: DebugEntry) => e.request.method === 'POST',
+      (e: DebugEntry) => e.duration > 500,
+    ];
     expect(applyFilters(e, preds)).toBe(false);
   });
 });

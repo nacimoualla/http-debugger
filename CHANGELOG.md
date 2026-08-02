@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0
+- Added: Elysia (Bun) adapter with full feature parity
+- Added: Astro adapter with middleware support
+- Added: Dashboard support for Elysia (SSE streaming, auth)
+- Fixed: Extract `readBodyWithLimit` to shared `src/core/stream.ts`
+
 ## 1.6.0
 - Added: Request replay button in dashboard detail panel
 - Added: Replay requests with exact headers, body, and method

@@ -4,3 +4,5 @@ dist/
 *.tgz
 .eslintcache
 docs/.vitepress/dist/
+.dstore
+skills-lock.json

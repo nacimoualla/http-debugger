@@ -27,6 +27,11 @@ function colorize(text: string, color: string, enabled: boolean): string {
   return enabled ? `${color}${text}${ansi.reset}` : text;
 }
 
+function sanitizeLogValue(value: string): string {
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/[\r\n\x00-\x08\x0e-\x1f\x7f]/g, '');
+}
+
 function createDepthReplacer(maxDepth: number, maxArrayItems: number) {
   const seen = new WeakSet();
 
@@ -144,12 +149,16 @@ export function formatEntry(
         ? ansi.yellow
         : ansi.green;
 
-  lines.push(`${colorize('→', methodColor, useColors)} ${request.method} ${request.path}`);
+  lines.push(
+    `${colorize('→', methodColor, useColors)} ${request.method} ${sanitizeLogValue(request.path)}`,
+  );
 
   const reqHeaders = sanitizeHeaders(request.headers, useSanitize);
   if (Object.keys(reqHeaders).length > 0) {
     for (const [key, value] of Object.entries(reqHeaders)) {
-      lines.push(`  ${colorize(`${key}: ${value}`, ansi.dim, useColors)}`);
+      lines.push(
+        `  ${colorize(`${sanitizeLogValue(key)}: ${sanitizeLogValue(value)}`, ansi.dim, useColors)}`,
+      );
     }
   }
 
@@ -170,7 +179,9 @@ export function formatEntry(
 
   if (Object.keys(response.headers).length > 0) {
     for (const [key, value] of Object.entries(response.headers)) {
-      lines.push(`  ${colorize(`${key}: ${value}`, ansi.dim, useColors)}`);
+      lines.push(
+        `  ${colorize(`${sanitizeLogValue(key)}: ${sanitizeLogValue(value)}`, ansi.dim, useColors)}`,
+      );
     }
   }
 

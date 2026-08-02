@@ -607,8 +607,7 @@ export function createDashboardEngine(maxEntries: number = 100): {
   const clients = new Set<(chunk: string) => void>();
   let paused = false;
 
-  const isProduction =
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'production';
+  const isProduction = typeof process !== 'undefined' && process.env?.NODE_ENV === 'production';
 
   return {
     isEnabled: !isProduction,

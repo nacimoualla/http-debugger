@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
-import type { MiddlewareOptions, DebugEntry } from '../types.js';
+import type { MiddlewareOptions, DebugEntry, DashboardAuthFn } from '../types.js';
 import { createTiming, Timing } from '../core/timing.js';
 import { generateId } from '../core/capture.js';
 import { formatEntry } from '../core/formatter.js';
@@ -8,28 +8,46 @@ import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
 export const httpDebugger: FastifyPluginAsync<MiddlewareOptions> = async (fastify, options) => {
   const maxBodySize = options.maxBodySize ?? 1024;
   const engine = createDashboardEngine(
-    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined,
   );
+  const dashboardAuth: DashboardAuthFn | undefined =
+    typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
 
   fastify.decorateRequest('httpDebuggerTiming', null);
   fastify.decorateRequest('httpDebuggerId', null);
 
   fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     if (engine.isEnabled) {
-      if (request.url === '/__debugger') {
-        reply.header('Content-Type', 'text/html');
-        reply.send(DASHBOARD_HTML);
-        return reply;
-      }
-      if (request.url === '/__debugger/stream') {
-        reply.raw.writeHead(200, {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        });
-        const teardown = engine.addClientWithHistory((chunk) => reply.raw.write(chunk));
-        request.raw.on('close', teardown);
-        return reply;
+      if (request.url === '/__debugger' || request.url === '/__debugger/stream') {
+        if (dashboardAuth) {
+          const webReq = new Request(
+            `http://${request.headers.host || 'localhost'}${request.url}`,
+            {
+              method: request.method,
+              headers: request.headers as Record<string, string>,
+            },
+          );
+          const allowed = await dashboardAuth(webReq);
+          if (!allowed) {
+            reply.code(403).send('Forbidden');
+            return reply;
+          }
+        }
+        if (request.url === '/__debugger') {
+          reply.header('Content-Type', 'text/html');
+          reply.send(DASHBOARD_HTML);
+          return reply;
+        }
+        if (request.url === '/__debugger/stream') {
+          reply.raw.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+          });
+          const teardown = engine.addClientWithHistory((chunk) => reply.raw.write(chunk));
+          request.raw.on('close', teardown);
+          return reply;
+        }
       }
     }
 

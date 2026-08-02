@@ -1,7 +1,7 @@
 {
   "name": "http-debugger",
-  "version": "1.6.0",
-  "description": "Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge. Stream-level request capture, smart body truncation, cURL generation, and framework adapters for Express, Fastify, Hono, and Next.js.",
+  "version": "1.7.0",
+  "description": "Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge. Stream-level request capture, smart body truncation, cURL generation, and framework adapters for Astro, Express, Fastify, Hono, Astro, Elysia and Next.js.",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
@@ -15,6 +15,7 @@
     "http",
     "debug",
     "middleware",
+    "astro",
     "express",
     "fastify",
     "hono",
@@ -45,6 +46,7 @@
     "http-debugger",
     "express-middleware",
     "fastify-plugin",
+    "astro-middleware",
     "hono-middleware",
     "nextjs-middleware",
     "api-debugging",
@@ -69,7 +71,12 @@
     "backend-debugging",
     "http-debugging",
     "request-debugging",
-    "response-debugging"
+    "response-debugging",
+    "elysia",
+    "bun",
+    "elysia-middleware",
+    "astro",
+    "astro-middleware"
   ],
   "type": "module",
   "main": "./dist/index.cjs",
@@ -80,6 +87,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./astro": {
+      "types": "./dist/adapters/astro.d.ts",
+      "import": "./dist/adapters/astro.js",
+      "require": "./dist/adapters/astro.cjs"
     },
     "./express": {
       "types": "./dist/adapters/express.d.ts",
@@ -105,6 +117,11 @@
       "types": "./dist/next.d.ts",
       "import": "./dist/next.js",
       "require": "./dist/next.cjs"
+    },
+    "./elysia": {
+      "types": "./dist/adapters/elysia.d.ts",
+      "import": "./dist/adapters/elysia.js",
+      "require": "./dist/adapters/elysia.cjs"
     }
   },
   "files": [
@@ -125,11 +142,19 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
+    "astro": ">=4.0.0",
+    "elysia": ">=1.0.0",
     "express": ">=4.0.0",
     "fastify": ">=4.0.0",
     "hono": ">=4.0.0"
   },
   "peerDependenciesMeta": {
+    "astro": {
+      "optional": true
+    },
+    "elysia": {
+      "optional": true
+    },
     "express": {
       "optional": true
     },
@@ -144,6 +169,8 @@
     "@eslint/js": "^10.0.1",
     "@types/express": "^4.17.21",
     "@types/node": "^20.14.0",
+    "astro": "^7.1.6",
+    "elysia": "^1.4.29",
     "eslint": "^10.8.0",
     "express": "^4.19.0",
     "fastify": "^5.10.0",

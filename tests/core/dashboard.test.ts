@@ -47,9 +47,24 @@ function createEntry(overrides: Partial<DebugEntry> = {}): DebugEntry {
   return {
     id: 'test-id',
     timestamp: Date.now(),
-    request: { method: 'GET', path: '/test', headers: {}, body: null, bodyTruncated: false, query: {}, params: {} },
+    request: {
+      method: 'GET',
+      path: '/test',
+      headers: {},
+      body: null,
+      bodyTruncated: false,
+      query: {},
+      params: {},
+    },
     response: { statusCode: 200, headers: {}, body: null, bodyTruncated: false, size: 0 },
-    timing: { headersReceived: 1, bodyComplete: 2, handlerStart: 3, handlerEnd: 10, responseStart: 11, responseEnd: 15 },
+    timing: {
+      headersReceived: 1,
+      bodyComplete: 2,
+      handlerStart: 3,
+      handlerEnd: 10,
+      responseStart: 11,
+      responseEnd: 15,
+    },
     duration: 15,
     ...overrides,
   };
@@ -79,7 +94,9 @@ describe('createDashboardEngine', () => {
     const entry = { id: '1', request: { method: 'GET' }, response: { statusCode: 200 } } as any;
     engine.addEntry(entry);
     let received = '';
-    engine.addClientWithHistory((chunk) => { received += chunk; });
+    engine.addClientWithHistory((chunk) => {
+      received += chunk;
+    });
     expect(received).toContain('"id":"1"');
   });
 
@@ -93,14 +110,18 @@ describe('createDashboardEngine', () => {
     engine.addEntry(e3);
     engine.addEntry(e4); // should shift e1
     let received = '';
-    engine.addClientWithHistory((chunk) => { received += chunk; });
+    engine.addClientWithHistory((chunk) => {
+      received += chunk;
+    });
     expect(received).not.toContain('"id":"1"');
     expect(received).toContain('"id":"4"');
   });
 
   it('broadcasts to connected clients', () => {
     let received = '';
-    engine.addClientWithHistory((chunk) => { received += chunk; });
+    engine.addClientWithHistory((chunk) => {
+      received += chunk;
+    });
     const entry = { id: '10' } as any;
     engine.addEntry(entry);
     expect(received).toContain('"id":"10"');
@@ -108,7 +129,9 @@ describe('createDashboardEngine', () => {
 
   it('teardown removes client from set', () => {
     let callCount = 0;
-    const sendFn = () => { callCount++; };
+    const sendFn = () => {
+      callCount++;
+    };
     const teardown = engine.addClientWithHistory(sendFn);
     engine.addEntry({ id: '1' } as any);
     expect(callCount).toBe(2); // history + broadcast
@@ -122,7 +145,9 @@ describe('createDashboardEngine', () => {
     engine.addEntry({ id: '1' } as any);
     engine.addEntry({ id: '2' } as any);
     let received = '';
-    engine.addClientWithHistory((chunk) => { received += chunk; });
+    engine.addClientWithHistory((chunk) => {
+      received += chunk;
+    });
     expect(received).toContain('"id":"1"');
     expect(received).toContain('"id":"2"');
   });
@@ -140,7 +165,7 @@ describe('DashboardEngine extended API', () => {
     engine.addEntry(createEntry({ id: '2' }));
     const entries = engine.getAllEntries();
     expect(entries).toHaveLength(2);
-    expect(entries.map(e => e.id)).toEqual(['1', '2']);
+    expect(entries.map((e) => e.id)).toEqual(['1', '2']);
   });
 
   it('clear empties the buffer', () => {
@@ -164,7 +189,7 @@ describe('DashboardEngine extended API', () => {
     engine.resume();
     engine.addEntry(createEntry({ id: '3' }));
     const entries = engine.getAllEntries();
-    expect(entries.map(e => e.id)).toEqual(['1', '3']);
+    expect(entries.map((e) => e.id)).toEqual(['1', '3']);
   });
 
   it('setMaxEntries caps buffer and evicts oldest', () => {

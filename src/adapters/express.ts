@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
-import type { MiddlewareOptions } from '../types.js';
+import type { MiddlewareOptions, DashboardAuthFn } from '../types.js';
 import { createTiming } from '../core/timing.js';
 import { generateId, captureRequestBody, captureResponseBody } from '../core/capture.js';
 import { formatEntry } from '../core/formatter.js';
@@ -8,8 +8,10 @@ import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
 export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
   const maxBodySize = options.maxBodySize ?? 1024;
   const engine = createDashboardEngine(
-    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined,
   );
+  const dashboardAuth: DashboardAuthFn | undefined =
+    typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const timing = createTiming();
@@ -18,20 +20,47 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
     timing.markHeadersReceived();
 
     if (engine.isEnabled) {
-      if (req.url === '/__debugger') {
-        res.setHeader('Content-Type', 'text/html');
-        res.end(DASHBOARD_HTML);
-        return;
-      }
-      if (req.url === '/__debugger/stream') {
-        res.writeHead(200, {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        });
-        const teardown = engine.addClientWithHistory((chunk) => res.write(chunk));
-        req.on('close', teardown);
-        return;
+      if (req.url === '/__debugger' || req.url === '/__debugger/stream') {
+        if (dashboardAuth) {
+          const webReq = new Request(`http://${req.headers.host || 'localhost'}${req.url}`, {
+            method: req.method,
+            headers: req.headers as Record<string, string>,
+          });
+          const allowed = dashboardAuth(webReq);
+          Promise.resolve(allowed).then((ok) => {
+            if (!ok) {
+              res.statusCode = 403;
+              res.end('Forbidden');
+            } else if (req.url === '/__debugger') {
+              res.setHeader('Content-Type', 'text/html');
+              res.end(DASHBOARD_HTML);
+            } else if (req.url === '/__debugger/stream') {
+              res.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                Connection: 'keep-alive',
+              });
+              const teardown = engine.addClientWithHistory((chunk) => res.write(chunk));
+              req.on('close', teardown);
+            }
+          });
+          return;
+        }
+        if (req.url === '/__debugger') {
+          res.setHeader('Content-Type', 'text/html');
+          res.end(DASHBOARD_HTML);
+          return;
+        }
+        if (req.url === '/__debugger/stream') {
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+          });
+          const teardown = engine.addClientWithHistory((chunk) => res.write(chunk));
+          req.on('close', teardown);
+          return;
+        }
       }
     }
 
