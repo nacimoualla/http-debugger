@@ -5,7 +5,7 @@ import { generateId } from '../core/capture.js';
 import { formatEntry } from '../core/formatter.js';
 import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
 
-const isTTY = (() => {
+export const isTTY = (() => {
   try {
     return (
       typeof process !== 'undefined' && process.stdout != null && process.stdout.isTTY === true
@@ -61,8 +61,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
   const engine = createDashboardEngine(
     typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
   );
-  const dashboardAuth: DashboardAuthFn | undefined =
-    typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
+  const dashboardAuth: DashboardAuthFn | undefined = typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
 
   return async (c, next) => {
     const timing = createTiming();

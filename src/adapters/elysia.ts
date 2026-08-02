@@ -4,22 +4,64 @@ import { generateId } from "../core/capture";
 import { formatEntry } from '../core/formatter.js';
 import { Elysia } from 'elysia';
 import { readBodyWithLimit } from "../core/stream";
-
+import { createDashboardEngine, DASHBOARD_HTML } from "../core/dashboard";
+import { DashboardAuthFn } from "../types";
+import { isTTY } from "./hono";
 
 export function httpDebugger(options: MiddlewareOptions = {}) {
     const maxBodySize = options.maxBodySize ?? 1024;
+    const engine = createDashboardEngine(
+        typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+    );
+    const dashboardAuth: DashboardAuthFn | undefined = typeof options.dashboard === 'object' ? options.dashboard.auth : undefined; 
     const stateMap = new WeakMap<Request, {
                 timing: ReturnType<typeof createTiming>
                 id: string
                 reqBody: unknown
                 reqTruncated: boolean
             }>()
-    
     return new Elysia ({ name: 'httpDebugger'}) 
         .onRequest(async ({request}) => {
             const timing = createTiming();
              const id = generateId();
             timing.markHeadersReceived();
+            if (engine.isEnabled){
+                const url = new URL(request.url)
+                if (url.pathname === '/__debugger' || url.pathname === '/__debugger/stream') {
+                    if (dashboardAuth) {
+                        const allowed = await dashboardAuth(request);
+                        if (!allowed){
+                            return new Response('Forbidden', { status: 403 });
+                        }
+                    }
+                    if (url.pathname === '/__debugger') {
+                        return new Response(DASHBOARD_HTML, {
+                            headers: { 'Content-Type': 'text/html'}
+                        });
+                    }
+                    if (url.pathname === '/__debugger/stream') {
+                        let teardown: (() => void) | undefined;
+                        const stream = new ReadableStream({
+                            start(controller) {
+                                const sendFn = (chunks: string) => {
+                                    controller.enqueue(new TextEncoder().encode(chunks));
+                                };
+                                teardown = engine.addClientWithHistory(sendFn);
+                            },
+                            cancel() {
+                                teardown?.();
+                            },
+                        });
+                        return new Response(stream, {
+                            headers: {
+                                'Content-Type': 'text/event-stream',
+                                'Cache-control': 'no-cache',
+                                'Connection': 'keep-alive',
+                            }
+                        })
+                    }
+                }
+            }
             const reqClone = request.clone();
             const { body: reqBodyStr, truncated: reqTruncated } = await readBodyWithLimit(
                 reqClone.body,
@@ -44,6 +86,7 @@ export function httpDebugger(options: MiddlewareOptions = {}) {
         })
         .onAfterHandle(async ({ request, response, set }) => {
             const state = stateMap.get(request);
+            const useColors = options.colors !== undefined ? options.colors : isTTY;
             if (!state) return;
             state.timing.markHandlerEnd();
             state.timing.markResponseStart();
@@ -77,13 +120,16 @@ export function httpDebugger(options: MiddlewareOptions = {}) {
             if (options.filter && !options.filter(entry)) return;
             console.log(
                 formatEntry(entry, {
-                    colors: true,
+                    colors: useColors,
                     sanitize: options.sanitize,
                     maxDepth: options.maxDepth,
                     maxArrayItems: options.maxArrayItems,
                     curl: options.curl
                 }),
             );
+            if (engine.isEnabled) {
+                engine.addEntry(entry);
+            }
             stateMap.delete(request);
         })
     .as('global')
