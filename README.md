@@ -10,6 +10,8 @@
 
 Stop writing `console.log(req.body)` and stop switching to Postman to replay failed requests. `http-debugger` intercepts raw HTTP streams to give you safe, readable, and actionable terminal observability.
 
+Please don't forget to support me with a star!
+
 ## The Output
 
 ```text
