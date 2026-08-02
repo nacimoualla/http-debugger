@@ -132,5 +132,5 @@ export function httpDebugger(options: MiddlewareOptions = {}) {
             }
             stateMap.delete(request);
         })
-    .as('global')
+    .as('global') as any
 }
