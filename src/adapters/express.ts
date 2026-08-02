@@ -10,8 +10,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
   const engine = createDashboardEngine(
     typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
   );
-  const dashboardAuth: DashboardAuthFn | undefined =
-    typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
+  const dashboardAuth: DashboardAuthFn | undefined = typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const timing = createTiming();

@@ -15,7 +15,7 @@ const isTTY = (() => {
   }
 })();
 
-async function readBodyWithLimit(
+export async function readBodyWithLimit(
   stream: ReadableStream | null,
   maxBodySize: number,
 ): Promise<{ body: string; truncated: boolean }> {

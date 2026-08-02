@@ -8,6 +8,7 @@ export default defineConfig({
     'src/adapters/fastify.ts',
     'src/adapters/hono.ts',
     'src/next.ts',
+    'src/adapters/elysia.ts',
   ],
   format: ['esm', 'cjs'],
   dts: true,

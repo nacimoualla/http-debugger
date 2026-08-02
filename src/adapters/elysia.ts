@@ -1,0 +1,90 @@
+import { DebugEntry, MiddlewareOptions } from "../types";
+import { createTiming } from "../core/timing";
+import { generateId } from "../core/capture";
+import { formatEntry } from '../core/formatter.js';
+import { Elysia } from 'elysia';
+import { readBodyWithLimit } from "../core/stream";
+
+
+export function httpDebugger(options: MiddlewareOptions = {}) {
+    const maxBodySize = options.maxBodySize ?? 1024;
+    const stateMap = new WeakMap<Request, {
+                timing: ReturnType<typeof createTiming>
+                id: string
+                reqBody: unknown
+                reqTruncated: boolean
+            }>()
+    
+    return new Elysia ({ name: 'httpDebugger'}) 
+        .onRequest(async ({request}) => {
+            const timing = createTiming();
+             const id = generateId();
+            timing.markHeadersReceived();
+            const reqClone = request.clone();
+            const { body: reqBodyStr, truncated: reqTruncated } = await readBodyWithLimit(
+                reqClone.body,
+                maxBodySize,
+            );
+            let reqBody: unknown = null;
+            if (reqBodyStr) {
+                const contentType = request.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    try {
+                        reqBody = JSON.parse(reqBodyStr);
+                    } catch {
+                        reqBody = '[parse error: invalid JSON]';
+                    }
+                } else {
+                    reqBody = reqBodyStr
+                }
+            }
+            timing.markBodyComplete();
+            timing.markHandlerStart();
+            stateMap.set(request, {timing, id, reqBody, reqTruncated});
+        })
+        .onAfterHandle(async ({ request, response, set }) => {
+            const state = stateMap.get(request);
+            if (!state) return;
+            state.timing.markHandlerEnd();
+            state.timing.markResponseStart();
+            let resBody: unknown = response;
+            if (typeof response === 'string') {
+                try { resBody = JSON.parse(response) } catch { /* keep as string */ }
+            }
+            state.timing.markResponseEnd();
+            const entry: DebugEntry = {
+                id: state.id,
+                timestamp:Date.now(),
+                request: {
+                    method: request.method,
+                    path: new URL(request.url).pathname,
+                    headers: Object.fromEntries(request.headers.entries()) as Record<string, string>,
+                    body: state.reqBody,
+                    bodyTruncated: state.reqTruncated,
+                    query: Object.fromEntries(new URL(request.url).searchParams),
+                    params: {},
+                },
+                response: {
+                    statusCode: Number(set.status),
+                    headers: set.headers as Record<string, string>,
+                    body: resBody,
+                    bodyTruncated: false,
+                    size: typeof resBody === 'string' ? Buffer.byteLength(resBody) : 0,
+                },
+                timing: state.timing.toJSON(),
+                duration: state.timing.duration,
+            }
+            if (options.filter && !options.filter(entry)) return;
+            console.log(
+                formatEntry(entry, {
+                    colors: true,
+                    sanitize: options.sanitize,
+                    maxDepth: options.maxDepth,
+                    maxArrayItems: options.maxArrayItems,
+                    curl: options.curl
+                }),
+            );
+            stateMap.delete(request);
+        })
+    .as('global')
+}
