@@ -86,7 +86,27 @@ import { httpDebugger } from 'http-debugger/hono';
 const app = new Hono();
 app.use('*', httpDebugger());
 ```
+### Astro
 
+```typescript
+// src/middleware.ts
+import { httpDebugger } from 'http-debugger/astro';
+
+export const onRequest = httpDebugger();
+
+```markdown
+### Elysia (Bun)
+
+```typescript
+import { Elysia } from 'elysia';
+import { httpDebugger } from 'http-debugger/elysia';
+
+const app = new Elysia()
+  .use(httpDebugger())
+  .get('/', () => ({ hello: 'world' }))
+  .listen(3000);
+
+```markdown
 ### Next.js (App Router)
 
 ```typescript

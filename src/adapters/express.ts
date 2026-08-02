@@ -8,9 +8,10 @@ import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
 export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
   const maxBodySize = options.maxBodySize ?? 1024;
   const engine = createDashboardEngine(
-    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined,
   );
-  const dashboardAuth: DashboardAuthFn | undefined = typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
+  const dashboardAuth: DashboardAuthFn | undefined =
+    typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const timing = createTiming();
@@ -37,7 +38,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
               res.writeHead(200, {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
+                Connection: 'keep-alive',
               });
               const teardown = engine.addClientWithHistory((chunk) => res.write(chunk));
               req.on('close', teardown);
@@ -54,7 +55,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): RequestHandler {
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
+            Connection: 'keep-alive',
           });
           const teardown = engine.addClientWithHistory((chunk) => res.write(chunk));
           req.on('close', teardown);

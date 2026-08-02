@@ -8,7 +8,7 @@ import { createDashboardEngine, DASHBOARD_HTML } from '../core/dashboard.js';
 export const httpDebugger: FastifyPluginAsync<MiddlewareOptions> = async (fastify, options) => {
   const maxBodySize = options.maxBodySize ?? 1024;
   const engine = createDashboardEngine(
-    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined,
   );
   const dashboardAuth: DashboardAuthFn | undefined =
     typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
@@ -20,10 +20,13 @@ export const httpDebugger: FastifyPluginAsync<MiddlewareOptions> = async (fastif
     if (engine.isEnabled) {
       if (request.url === '/__debugger' || request.url === '/__debugger/stream') {
         if (dashboardAuth) {
-          const webReq = new Request(`http://${request.headers.host || 'localhost'}${request.url}`, {
-            method: request.method,
-            headers: request.headers as Record<string, string>,
-          });
+          const webReq = new Request(
+            `http://${request.headers.host || 'localhost'}${request.url}`,
+            {
+              method: request.method,
+              headers: request.headers as Record<string, string>,
+            },
+          );
           const allowed = await dashboardAuth(webReq);
           if (!allowed) {
             reply.code(403).send('Forbidden');
@@ -39,7 +42,7 @@ export const httpDebugger: FastifyPluginAsync<MiddlewareOptions> = async (fastif
           reply.raw.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
+            Connection: 'keep-alive',
           });
           const teardown = engine.addClientWithHistory((chunk) => reply.raw.write(chunk));
           request.raw.on('close', teardown);

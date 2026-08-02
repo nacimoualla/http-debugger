@@ -31,20 +31,35 @@ function parseSize(value: string): { op: string; bytes: number } | null {
   if (!m) return null;
   const [, op, num, unit] = m;
   const unitKey = (unit || 'b').toLowerCase();
-  const multipliers: Record<string, number> = { b: 1, kb: 1024, mb: 1024 * 1024, gb: 1024 * 1024 * 1024 };
+  const multipliers: Record<string, number> = {
+    b: 1,
+    kb: 1024,
+    mb: 1024 * 1024,
+    gb: 1024 * 1024 * 1024,
+  };
   const mult = multipliers[unitKey];
   if (mult === undefined) return null;
   return { op, bytes: Number(num) * mult };
 }
 
-function makeCompare(op: string, value: number, getValue: (e: DebugEntry) => number): (e: DebugEntry) => boolean {
+function makeCompare(
+  op: string,
+  value: number,
+  getValue: (e: DebugEntry) => number,
+): (e: DebugEntry) => boolean {
   switch (op) {
-    case '>': return (e) => getValue(e) > value;
-    case '>=': return (e) => getValue(e) >= value;
-    case '<': return (e) => getValue(e) < value;
-    case '<=': return (e) => getValue(e) <= value;
-    case '=': return (e) => getValue(e) === value;
-    default: return () => true;
+    case '>':
+      return (e) => getValue(e) > value;
+    case '>=':
+      return (e) => getValue(e) >= value;
+    case '<':
+      return (e) => getValue(e) < value;
+    case '<=':
+      return (e) => getValue(e) <= value;
+    case '=':
+      return (e) => getValue(e) === value;
+    default:
+      return () => true;
   }
 }
 
@@ -52,7 +67,7 @@ export function parseFilters(raw: RawFilters): CompiledPredicate[] {
   const predicates: CompiledPredicate[] = [];
 
   if (raw.method?.length) {
-    const set = new Set(raw.method.map(m => m.toUpperCase()));
+    const set = new Set(raw.method.map((m) => m.toUpperCase()));
     predicates.push((e) => set.has(e.request.method.toUpperCase()));
   }
 
@@ -100,5 +115,5 @@ export function parseFilters(raw: RawFilters): CompiledPredicate[] {
 }
 
 export function applyFilters(entry: DebugEntry, predicates: CompiledPredicate[]): boolean {
-  return predicates.every(p => p(entry));
+  return predicates.every((p) => p(entry));
 }

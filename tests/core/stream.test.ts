@@ -119,9 +119,7 @@ describe('readBodyWithLimit', () => {
   });
 
   it('handles large number of small chunks', async () => {
-    const chunks = Array.from({ length: 100 }, (_, i) =>
-      new TextEncoder().encode(String(i % 10)),
-    );
+    const chunks = Array.from({ length: 100 }, (_, i) => new TextEncoder().encode(String(i % 10)));
     const stream = new ReadableStream({
       start(controller) {
         for (const chunk of chunks) {

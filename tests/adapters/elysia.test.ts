@@ -8,8 +8,7 @@ describe('httpDebugger Elysia adapter', () => {
 
   beforeEach(() => {
     capturedOutput = [];
-    app = new Elysia()
-      .use(httpDebugger({ colors: false }));
+    app = new Elysia().use(httpDebugger({ colors: false }));
 
     vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
       capturedOutput.push(args.join(' '));
@@ -47,7 +46,7 @@ describe('httpDebugger Elysia adapter', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Alice' }),
-      })
+      }),
     );
 
     expect(res.status).toBe(200);
@@ -65,7 +64,7 @@ describe('httpDebugger Elysia adapter', () => {
     const res = await app.handle(
       new Request('http://localhost:3000/secure', {
         headers: { Authorization: 'Bearer secret123' },
-      })
+      }),
     );
 
     expect(res.status).toBe(200);
@@ -76,8 +75,7 @@ describe('httpDebugger Elysia adapter', () => {
   });
 
   it('captures cURL command when enabled', async () => {
-    const curlApp = new Elysia()
-      .use(httpDebugger({ colors: false, curl: true }));
+    const curlApp = new Elysia().use(httpDebugger({ colors: false, curl: true }));
 
     curlApp.get('/test', () => {
       return { ok: true };

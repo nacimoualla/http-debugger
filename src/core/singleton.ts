@@ -6,7 +6,8 @@ const globalForDebugger = globalThis as unknown as {
   __httpDebuggerOptions: DashboardOptions | undefined;
 };
 
-export const engine: DashboardEngine = globalForDebugger.__httpDebuggerEngine ?? createDashboardEngine();
+export const engine: DashboardEngine =
+  globalForDebugger.__httpDebuggerEngine ?? createDashboardEngine();
 
 if (process.env.NODE_ENV !== 'production') {
   globalForDebugger.__httpDebuggerEngine = engine;

@@ -119,7 +119,9 @@ describe('httpDebugger Astro adapter', () => {
         body: JSON.stringify({ name: 'Alice' }),
       });
 
-      const res = await run(middleware, ctx, async () => createMockResponse(201, { created: true }));
+      const res = await run(middleware, ctx, async () =>
+        createMockResponse(201, { created: true }),
+      );
       expect(res.status).toBe(201);
 
       await new Promise((r) => setTimeout(r, 150));
@@ -383,7 +385,12 @@ describe('httpDebugger Astro adapter', () => {
 
     it('captures status code 201', async () => {
       const middleware = httpDebugger({ colors: false });
-      const ctx = createMockContext({ method: 'POST', pathname: '/api/create', headers: { 'content-type': 'application/json' }, body: '{}' });
+      const ctx = createMockContext({
+        method: 'POST',
+        pathname: '/api/create',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      });
 
       await run(middleware, ctx, async () => createMockResponse(201, { created: true }));
 
@@ -460,9 +467,7 @@ describe('httpDebugger Astro adapter', () => {
       const middleware = httpDebugger({ colors: false, maxBodySize: 10 });
       const ctx = createMockContext();
 
-      await run(middleware, ctx, async () =>
-        createMockResponse(200, { data: 'x'.repeat(100) }),
-      );
+      await run(middleware, ctx, async () => createMockResponse(200, { data: 'x'.repeat(100) }));
 
       await new Promise((r) => setTimeout(r, 150));
       expect(capturedOutput.some((o) => o.includes('[truncated]'))).toBe(true);
@@ -699,7 +704,7 @@ describe('httpDebugger Astro adapter', () => {
       await run(middleware, ctx);
 
       await new Promise((r) => setTimeout(r, 150));
-      expect(capturedOutput.some((o) => o.includes("curl -X POST"))).toBe(true);
+      expect(capturedOutput.some((o) => o.includes('curl -X POST'))).toBe(true);
       expect(capturedOutput.some((o) => o.includes("-d '"))).toBe(true);
     });
 
@@ -760,9 +765,7 @@ describe('httpDebugger Astro adapter', () => {
         body: JSON.stringify({ a: { b: { c: { d: 'deep' } } } }),
       });
 
-      await run(middleware, ctx, async () =>
-        createMockResponse(200, { x: { y: { z: 'deep' } } }),
-      );
+      await run(middleware, ctx, async () => createMockResponse(200, { x: { y: { z: 'deep' } } }));
 
       await new Promise((r) => setTimeout(r, 150));
       expect(capturedOutput.some((o) => o.includes('[Object]'))).toBe(true);
@@ -806,9 +809,7 @@ describe('httpDebugger Astro adapter', () => {
       });
       const ctx = createMockContext();
 
-      const res = await run(middleware, ctx, async () =>
-        createMockResponse(418, "I'm a teapot"),
-      );
+      const res = await run(middleware, ctx, async () => createMockResponse(418, "I'm a teapot"));
 
       expect(res.status).toBe(418);
       const body = await res.text();
@@ -987,7 +988,9 @@ describe('httpDebugger Astro adapter', () => {
 
     it('handles response with large JSON body within limit', async () => {
       const middleware = httpDebugger({ colors: false, maxBodySize: 4096 });
-      const largeData = { items: Array.from({ length: 50 }, (_, i) => ({ id: i, value: `item-${i}` })) };
+      const largeData = {
+        items: Array.from({ length: 50 }, (_, i) => ({ id: i, value: `item-${i}` })),
+      };
       const ctx = createMockContext();
 
       await run(middleware, ctx, async () => createMockResponse(200, largeData));

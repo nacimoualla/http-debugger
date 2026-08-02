@@ -6,16 +6,14 @@ import { generateId } from './core/capture.js';
 import { formatEntry } from './core/formatter.js';
 import { DASHBOARD_HTML } from './core/dashboard.js';
 
-export function dashboardRoute(
-  options?: DashboardOptions,
-): (req: Request) => Promise<Response> {
+export function dashboardRoute(options?: DashboardOptions): (req: Request) => Promise<Response> {
   if (options) {
     setDashboardOptions(options);
   }
-  const dashboardAuth: DashboardAuthFn | undefined = options?.dashboard
-    && typeof options.dashboard === 'object'
-    ? options.dashboard.auth
-    : undefined;
+  const dashboardAuth: DashboardAuthFn | undefined =
+    options?.dashboard && typeof options.dashboard === 'object'
+      ? options.dashboard.auth
+      : undefined;
 
   return async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
@@ -45,7 +43,7 @@ export function dashboardRoute(
         headers: {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
+          Connection: 'keep-alive',
         },
       });
     }

@@ -59,9 +59,10 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
   const maxBodySize = options.maxBodySize ?? 1024;
   const useColors = options.colors !== undefined ? options.colors : isTTY;
   const engine = createDashboardEngine(
-    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined
+    typeof options.dashboard === 'object' ? options.dashboard.maxEntries : undefined,
   );
-  const dashboardAuth: DashboardAuthFn | undefined = typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
+  const dashboardAuth: DashboardAuthFn | undefined =
+    typeof options.dashboard === 'object' ? options.dashboard.auth : undefined;
 
   return async (c, next) => {
     const timing = createTiming();
@@ -98,7 +99,7 @@ export function httpDebugger(options: MiddlewareOptions = {}): MiddlewareHandler
             headers: {
               'Content-Type': 'text/event-stream',
               'Cache-Control': 'no-cache',
-              'Connection': 'keep-alive',
+              Connection: 'keep-alive',
             },
           });
         }

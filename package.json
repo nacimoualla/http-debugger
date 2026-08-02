@@ -1,7 +1,7 @@
 {
   "name": "http-debugger",
-  "version": "1.6.0",
-  "description": "Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge. Stream-level request capture, smart body truncation, cURL generation, and framework adapters for Astro, Express, Fastify, Hono, and Next.js.",
+  "version": "1.7.0",
+  "description": "Zero-dependency HTTP debug middleware for Node.js, Deno, Bun, and the Edge. Stream-level request capture, smart body truncation, cURL generation, and framework adapters for Astro, Express, Fastify, Hono, Astro, Elysia and Next.js.",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
@@ -74,7 +74,9 @@
     "response-debugging",
     "elysia",
     "bun",
-    "elysia-middleware"
+    "elysia-middleware",
+    "astro",
+    "astro-middleware"
   ],
   "type": "module",
   "main": "./dist/index.cjs",

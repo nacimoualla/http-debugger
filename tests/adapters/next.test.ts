@@ -17,7 +17,7 @@ describe('withHttpDebugger', () => {
   });
 
   it('creates a wrapped handler', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       return Response.json({ ok: true });
     };
     const wrapped = withHttpDebugger(handler);
@@ -25,7 +25,7 @@ describe('withHttpDebugger', () => {
   });
 
   it('passes request through to handler', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       const data = await req.json();
       return Response.json({ received: data });
     };
@@ -43,7 +43,7 @@ describe('withHttpDebugger', () => {
   });
 
   it('captures request body', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       return Response.json({ ok: true });
     };
     const wrapped = withHttpDebugger(handler, { colors: false });
@@ -62,7 +62,7 @@ describe('withHttpDebugger', () => {
   });
 
   it('captures response body', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       return Response.json({ id: 1 });
     };
     const wrapped = withHttpDebugger(handler, { colors: false });
@@ -75,7 +75,7 @@ describe('withHttpDebugger', () => {
   });
 
   it('captures status code', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       return new Response(null, { status: 204 });
     };
     const wrapped = withHttpDebugger(handler, { colors: false });
@@ -88,7 +88,7 @@ describe('withHttpDebugger', () => {
   });
 
   it('captures timing', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       return Response.json({ ok: true });
     };
     const wrapped = withHttpDebugger(handler, { colors: false });
@@ -101,7 +101,7 @@ describe('withHttpDebugger', () => {
   });
 
   it('pushes entry to singleton engine', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       return Response.json({ ok: true });
     };
     const wrapped = withHttpDebugger(handler, { colors: false });
@@ -111,13 +111,15 @@ describe('withHttpDebugger', () => {
     await new Promise((r) => setTimeout(r, 200));
 
     let received = '';
-    engine.addClientWithHistory((chunk) => { received += chunk; });
+    engine.addClientWithHistory((chunk) => {
+      received += chunk;
+    });
     expect(received).toContain('"method":"POST"');
     expect(received).toContain('"/api/test"');
   });
 
   it('does not log when filter returns false', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       return Response.json({ ok: true });
     };
     const wrapped = withHttpDebugger(handler, {
@@ -133,7 +135,7 @@ describe('withHttpDebugger', () => {
   });
 
   it('returns response instantly without blocking', async () => {
-    const handler = async (req: Request) => {
+    const handler = async (_req: Request) => {
       return Response.json({ ok: true });
     };
     const wrapped = withHttpDebugger(handler, { colors: false });
